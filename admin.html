@@ -260,7 +260,8 @@ const menuItems = [
   { id: 'dishes', name: '菜品管理', icon: '🍖' },
   { id: 'tables', name: '桌台设置', icon: '🪑' },
   { id: 'stats', name: '数据统计', icon: '📊' },
-  { id: 'stock', name: '进出货管理', icon: '📦' },
+  { id: 'stockIn', name: '进货管理', icon: '📥' },
+  { id: 'stockOut', name: '出货管理', icon: '📤' },
   { id: 'settings', name: '系统设置', icon: '⚙️' },
 ];
 
@@ -318,7 +319,8 @@ function renderPage() {
     case 'dishes': renderDishes(); break;
     case 'tables': renderTableSettings(); break;
     case 'stats': renderStats(); break;
-    case 'stock': renderStock(); break;
+    case 'stockIn': renderStockIn(); break;
+    case 'stockOut': renderStockOut(); break;
     case 'settings': renderSettings(); break;
   }
 }
@@ -1427,157 +1429,112 @@ async function renderStats() {
   }
 }
 
-// ========== 进出货管理 ==========
-let stockFilter = 'all';
-let stockDate = '';
+// ========== 进货管理 ==========
+let stockInDate = '';
 
-async function renderStock() {
+async function renderStockIn() {
   const area = document.getElementById('content-area');
   area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
 
   try {
-    const allRecords = await SUPA.list('restaurant_stock', 'order=created_at.desc');
-    // 兼容旧数据
-    allRecords.forEach(r => { if (!r.type) r.type = 'in'; });
+    const all = await SUPA.list('restaurant_stock', 'order=created_at.desc');
+    const records = all.filter(r => (r.type || 'in') === 'in');
 
     const today = new Date().toISOString().slice(0,10);
-    const todayRecords = allRecords.filter(r => (r.created_at || '').slice(0,10) === today);
-    const todayIn = todayRecords.filter(r => r.type === 'in').reduce((s,r) => s + (r.total_price||0), 0);
-    const todayOut = todayRecords.filter(r => r.type === 'out').reduce((s,r) => s + (r.total_price||0), 0);
-    const todayProfit = todayRecords.filter(r => r.type === 'out').reduce((s,r) => s + (r.profit||0), 0);
+    const todayIn = records.filter(r => (r.created_at || '').slice(0,10) === today)
+      .reduce((s,r) => s + (r.total_price||0), 0);
+    const todayCount = records.filter(r => (r.created_at || '').slice(0,10) === today).length;
+    const totalIn = records.reduce((s,r) => s + (r.total_price||0), 0);
 
-    // 筛选
-    let records = allRecords;
-    if (stockFilter === 'in') records = records.filter(r => r.type === 'in');
-    if (stockFilter === 'out') records = records.filter(r => r.type === 'out');
-    if (stockDate) records = records.filter(r => (r.created_at || '').slice(0,10) === stockDate);
-
-    const totalIn = records.filter(r => r.type === 'in').reduce((s,r) => s + (r.total_price||0), 0);
-    const totalOut = records.filter(r => r.type === 'out').reduce((s,r) => s + (r.total_price||0), 0);
-    const totalProfit = records.filter(r => r.type === 'out').reduce((s,r) => s + (r.profit||0), 0);
+    let filtered = records;
+    if (stockInDate) filtered = filtered.filter(r => (r.created_at || '').slice(0,10) === stockInDate);
+    const filteredTotal = filtered.reduce((s,r) => s + (r.total_price||0), 0);
 
     area.innerHTML = `
       <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:15px;">
         <div class="stat-card stat-blue">
-          <div class="stat-label">📅 今日进货</div>
+          <div class="stat-label">📅 今日进货金额</div>
           <div class="stat-value">¥${todayIn.toFixed(2)}</div>
-          <div class="stat-sub">${todayRecords.filter(r=>r.type==='in').length} 笔</div>
-        </div>
-        <div class="stat-card stat-orange">
-          <div class="stat-label">📤 今日出货</div>
-          <div class="stat-value">¥${todayOut.toFixed(2)}</div>
-          <div class="stat-sub">${todayRecords.filter(r=>r.type==='out').length} 笔</div>
-        </div>
-        <div class="stat-card stat-green">
-          <div class="stat-label">💰 今日毛利</div>
-          <div class="stat-value">¥${todayProfit.toFixed(2)}</div>
-          <div class="stat-sub">出货毛利合计</div>
+          <div class="stat-sub">${todayCount} 笔</div>
         </div>
         <div class="stat-card stat-purple">
-          <div class="stat-label">📊 今日净额</div>
-          <div class="stat-value" style="color:${todayProfit - todayIn >= 0 ? '#22c55e' : '#ef4444'};">
-            ¥${(todayProfit - todayIn).toFixed(2)}
-          </div>
-          <div class="stat-sub">毛利 - 进货成本</div>
+          <div class="stat-label">📦 累计进货总额</div>
+          <div class="stat-value">¥${totalIn.toFixed(2)}</div>
+          <div class="stat-sub">共 ${records.length} 笔</div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-label">🛒 物品种类</div>
+          <div class="stat-value">${[...new Set(records.map(r=>r.item_name))].length}</div>
+          <div class="stat-sub">不同物品</div>
+        </div>
+        <div class="stat-card stat-orange">
+          <div class="stat-label">📊 今日笔数</div>
+          <div class="stat-value">${todayCount}</div>
+          <div class="stat-sub">今日进货单</div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <div class="card-title">📦 进出货管理 (${records.length})</div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn ${stockFilter==='all'?'btn-primary':'btn-outline'} btn-small" onclick="setStockFilter('all')">全部</button>
-            <button class="btn ${stockFilter==='in'?'btn-primary':'btn-outline'} btn-small" onclick="setStockFilter('in')">进货</button>
-            <button class="btn ${stockFilter==='out'?'btn-primary':'btn-outline'} btn-small" onclick="setStockFilter('out')">出货</button>
-            <button class="btn btn-warn btn-small" onclick="showStockModal()">+ 新增</button>
-          </div>
+          <div class="card-title">📥 进货管理 (${filtered.length})</div>
+          <button class="btn btn-warn btn-small" onclick="showStockInModal()">+ 新增进货</button>
         </div>
-
         <div class="search-bar">
-          <input class="search-input" placeholder="搜索物品名称/供应商" oninput="filterStockTable(this.value)">
-          <input type="date" class="search-select" value="${stockDate}" onchange="stockDate=this.value;renderStock();" style="min-width:150px;">
+          <input class="search-input" placeholder="搜索物品/供应商" oninput="filterStockInTable(this.value)">
+          <input type="date" class="search-select" value="${stockInDate}" onchange="stockInDate=this.value;renderStockIn();" style="min-width:150px;">
+          ${stockInDate ? `<button class="btn btn-outline btn-small" onclick="stockInDate='';renderStockIn();">清除日期</button>` : ''}
         </div>
-
-        ${stockDate || stockFilter !== 'all' ? `
-        <div style="padding:10px 15px;background:#f9fafb;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-          <span style="color:#666;font-size:13px;">
-            筛选结果：<b>${records.length}</b> 条
-            &nbsp;|&nbsp; 进货 <b style="color:#3b82f6;">¥${totalIn.toFixed(2)}</b>
-            &nbsp;|&nbsp; 出货 <b style="color:#f97316;">¥${totalOut.toFixed(2)}</b>
-            &nbsp;|&nbsp; 毛利 <b style="color:#22c55e;">¥${totalProfit.toFixed(2)}</b>
-          </span>
-          <button class="btn btn-outline btn-small" onclick="stockFilter='all';stockDate='';renderStock();">清除筛选</button>
-        </div>
-        ` : ''}
-
-        <table class="table" id="stock-table">
+        ${stockInDate ? `
+        <div style="padding:10px 15px;background:#eff6ff;border-top:1px solid #bfdbfe;color:#1e40af;font-size:13px;">
+          📅 ${stockInDate} 当日进货：<b>${filtered.length}</b> 笔，合计 <b>¥${filteredTotal.toFixed(2)}</b>
+        </div>` : ''}
+        <table class="table" id="stockin-table">
           <thead>
             <tr>
-              <th>类型</th>
               <th>物品名称</th>
               <th>分类</th>
               <th>数量</th>
               <th>单价</th>
               <th>总金额</th>
-              <th>毛利</th>
-              <th>供应商/去向</th>
+              <th>供应商</th>
               <th>操作人</th>
               <th>时间</th>
               <th>操作</th>
             </tr>
           </thead>
           <tbody>
-            ${records.map(r => `
+            ${filtered.map(r => `
               <tr>
-                <td>${r.type === 'out' ? '<span class="tag tag-orange">出货</span>' : '<span class="tag tag-blue">进货</span>'}</td>
                 <td><b>${r.item_name}</b></td>
-                <td><span class="tag tag-gray">${r.category || '-'}</span></td>
+                <td><span class="tag tag-blue">${r.category || '-'}</span></td>
                 <td>${r.quantity} ${r.unit || ''}</td>
                 <td>¥${(r.unit_price || 0).toFixed(2)}</td>
-                <td style="font-weight:bold;color:${r.type==='out'?'#f97316':'#3b82f6'};">
-                  ¥${(r.total_price || 0).toFixed(2)}
-                </td>
-                <td style="color:#22c55e;font-weight:bold;">${r.type==='out' ? '¥'+(r.profit||0).toFixed(2) : '-'}</td>
+                <td style="color:#3b82f6;font-weight:bold;">¥${(r.total_price || 0).toFixed(2)}</td>
                 <td>${r.supplier || '-'}</td>
                 <td>${r.operator_name || '-'}</td>
                 <td style="font-size:12px;color:#888;">${new Date(r.created_at).toLocaleString()}</td>
-                <td>
-                  <button class="btn btn-danger btn-small" onclick="deleteStock(${r.id})">删除</button>
-                </td>
+                <td><button class="btn btn-danger btn-small" onclick="deleteStock(${r.id},'in')">删除</button></td>
               </tr>
-            `).join('') || '<tr><td colspan="11" style="text-align:center;color:#999;padding:30px;">暂无记录</td></tr>'}
+            `).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:30px;">暂无进货记录</td></tr>'}
           </tbody>
         </table>
       </div>
     `;
-    window._allStock = allRecords;
+    window._allStockIn = records;
   } catch (e) {
     area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
   }
 }
 
-function setStockFilter(type) {
-  stockFilter = type;
-  renderStock();
-}
-
-function filterStockTable(keyword) {
-  const rows = document.querySelectorAll('#stock-table tbody tr');
+function filterStockInTable(keyword) {
+  const rows = document.querySelectorAll('#stockin-table tbody tr');
   keyword = keyword.toLowerCase();
-  rows.forEach(r => {
-    r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none';
-  });
+  rows.forEach(r => { r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none'; });
 }
 
-function showStockModal() {
+function showStockInModal() {
   const html = `
-    <h3>📦 新增记录</h3>
-    <div class="form-group"><label class="form-label">类型</label>
-      <select class="form-input" id="s-type" onchange="onStockTypeChange()">
-        <option value="in">进货</option>
-        <option value="out">出货</option>
-      </select>
-    </div>
+    <h3>📥 新增进货</h3>
     <div class="form-group"><label class="form-label">物品名称 *</label><input class="form-input" id="s-name" placeholder="如：羊肉、啤酒、蔬菜"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="form-group"><label class="form-label">分类</label>
@@ -1593,40 +1550,223 @@ function showStockModal() {
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="form-group"><label class="form-label">数量 *</label><input class="form-input" type="number" id="s-qty"></div>
-      <div class="form-group"><label class="form-label">单价</label><input class="form-input" type="number" id="s-price"></div>
+      <div class="form-group"><label class="form-label">单价（元）</label><input class="form-input" type="number" id="s-price"></div>
     </div>
-    <div id="profit-field" style="display:none;" class="form-group">
-      <label class="form-label">毛利（出货赚的钱）</label>
-      <input class="form-input" type="number" id="s-profit" value="0">
-    </div>
-    <div class="form-group">
-      <label class="form-label" id="s-supplier-label">供应商</label>
-      <input class="form-input" id="s-supplier" placeholder="供应商名称或出货去向">
-    </div>
+    <div class="form-group"><label class="form-label">供应商</label><input class="form-input" id="s-supplier" placeholder="供应商名称"></div>
     <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="s-note"></div>
     <div class="modal-btns">
       <button class="btn btn-outline" onclick="closeModal()">取消</button>
-      <button class="btn btn-primary" onclick="saveStock()">保存</button>
+      <button class="btn btn-primary" onclick="saveStock('in')">保存</button>
     </div>
   `;
   showModalBox(html);
 }
 
-function onStockTypeChange() {
-  const type = document.getElementById('s-type').value;
-  document.getElementById('profit-field').style.display = type === 'out' ? 'block' : 'none';
-  document.getElementById('s-supplier-label').textContent = type === 'out' ? '去向/用途' : '供应商';
+// ========== 出货管理 ==========
+let stockOutDate = '';
+let stockOutView = 'all'; // all / today
+
+async function renderStockOut() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const all = await SUPA.list('restaurant_stock', 'order=created_at.desc');
+    const records = all.filter(r => r.type === 'out');
+
+    const today = new Date().toISOString().slice(0,10);
+    const todayRecords = records.filter(r => (r.created_at || '').slice(0,10) === today);
+    const todayAmt = todayRecords.reduce((s,r) => s + (r.total_price||0), 0);
+    const todayProfit = todayRecords.reduce((s,r) => s + (r.profit||0), 0);
+    const todayCost = todayAmt - todayProfit;
+
+    const totalAmt = records.reduce((s,r) => s + (r.total_price||0), 0);
+    const totalProfit = records.reduce((s,r) => s + (r.profit||0), 0);
+    const totalCost = totalAmt - totalProfit;
+    const profitRate = totalAmt > 0 ? ((totalProfit / totalAmt) * 100).toFixed(1) : 0;
+
+    let filtered = records;
+    if (stockOutView === 'today') filtered = todayRecords;
+    else if (stockOutDate) filtered = filtered.filter(r => (r.created_at || '').slice(0,10) === stockOutDate);
+
+    const fAmt = filtered.reduce((s,r) => s + (r.total_price||0), 0);
+    const fProfit = filtered.reduce((s,r) => s + (r.profit||0), 0);
+    const fCost = fAmt - fProfit;
+
+    // 分类统计
+    const catStats = {};
+    filtered.forEach(r => {
+      const c = r.category || '其他';
+      if (!catStats[c]) catStats[c] = { amt: 0, profit: 0, count: 0 };
+      catStats[c].amt += r.total_price || 0;
+      catStats[c].profit += r.profit || 0;
+      catStats[c].count += 1;
+    });
+
+    area.innerHTML = `
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:15px;">
+        <div class="stat-card stat-orange">
+          <div class="stat-label">📤 今日出货总额</div>
+          <div class="stat-value">¥${todayAmt.toFixed(2)}</div>
+          <div class="stat-sub">${todayRecords.length} 笔</div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-label">💰 今日毛利</div>
+          <div class="stat-value">¥${todayProfit.toFixed(2)}</div>
+          <div class="stat-sub">今日成本 ¥${todayCost.toFixed(2)}</div>
+        </div>
+        <div class="stat-card stat-blue">
+          <div class="stat-label">📦 累计出货总额</div>
+          <div class="stat-value">¥${totalAmt.toFixed(2)}</div>
+          <div class="stat-sub">共 ${records.length} 笔</div>
+        </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-label">📈 累计毛利率</div>
+          <div class="stat-value">${profitRate}%</div>
+          <div class="stat-sub">总毛利 ¥${totalProfit.toFixed(2)}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📤 出货管理 (${filtered.length})</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn ${stockOutView==='all'&&!stockOutDate?'btn-primary':'btn-outline'} btn-small" onclick="stockOutView='all';stockOutDate='';renderStockOut();">全部出货</button>
+            <button class="btn ${stockOutView==='today'?'btn-primary':'btn-outline'} btn-small" onclick="stockOutView='today';stockOutDate='';renderStockOut();">当日出货</button>
+            <button class="btn btn-warn btn-small" onclick="showStockOutModal()">+ 新增出货</button>
+          </div>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" placeholder="搜索物品/去向" oninput="filterStockOutTable(this.value)">
+          <input type="date" class="search-select" value="${stockOutDate}" onchange="stockOutDate=this.value;stockOutView='all';renderStockOut();" style="min-width:150px;">
+        </div>
+
+        <div style="padding:12px 15px;background:#fffbeb;border-top:1px solid #fde68a;display:grid;grid-template-columns:repeat(4,1fr);gap:15px;font-size:13px;">
+          <div>📊 筛选结果：<b>${filtered.length}</b> 笔</div>
+          <div>💵 出货金额：<b style="color:#f97316;">¥${fAmt.toFixed(2)}</b></div>
+          <div>💸 成本：<b style="color:#6b7280;">¥${fCost.toFixed(2)}</b></div>
+          <div>💰 毛利：<b style="color:#22c55e;">¥${fProfit.toFixed(2)}</b></div>
+        </div>
+
+        ${Object.keys(catStats).length > 0 ? `
+        <div style="padding:10px 15px;background:#f0fdf4;border-top:1px solid #bbf7d0;">
+          <div style="font-size:13px;color:#166534;margin-bottom:8px;"><b>📊 分类收益统计</b></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            ${Object.entries(catStats).sort((a,b)=>b[1].profit-a[1].profit).map(([cat,s]) => `
+              <div style="background:#fff;padding:8px 14px;border-radius:8px;border:1px solid #bbf7d0;font-size:12px;flex:1;min-width:120px;">
+                <div style="color:#666;">${cat}</div>
+                <div style="font-weight:bold;color:#22c55e;font-size:15px;">¥${s.profit.toFixed(2)}</div>
+                <div style="color:#999;font-size:11px;">${s.count}笔 / 销¥${s.amt.toFixed(0)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+
+        <table class="table" id="stockout-table">
+          <thead>
+            <tr>
+              <th>物品名称</th>
+              <th>分类</th>
+              <th>数量</th>
+              <th>单价</th>
+              <th>出货金额</th>
+              <th>毛利</th>
+              <th>毛利率</th>
+              <th>去向/用途</th>
+              <th>操作人</th>
+              <th>时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(r => {
+              const rate = r.total_price > 0 ? ((r.profit / r.total_price) * 100).toFixed(1) : 0;
+              return `
+              <tr>
+                <td><b>${r.item_name}</b></td>
+                <td><span class="tag tag-orange">${r.category || '-'}</span></td>
+                <td>${r.quantity} ${r.unit || ''}</td>
+                <td>¥${(r.unit_price || 0).toFixed(2)}</td>
+                <td style="color:#f97316;font-weight:bold;">¥${(r.total_price || 0).toFixed(2)}</td>
+                <td style="color:#22c55e;font-weight:bold;">¥${(r.profit || 0).toFixed(2)}</td>
+                <td><span class="tag tag-green">${rate}%</span></td>
+                <td>${r.supplier || '-'}</td>
+                <td>${r.operator_name || '-'}</td>
+                <td style="font-size:12px;color:#888;">${new Date(r.created_at).toLocaleString()}</td>
+                <td><button class="btn btn-danger btn-small" onclick="deleteStock(${r.id},'out')">删除</button></td>
+              </tr>
+              `;
+            }).join('') || '<tr><td colspan="11" style="text-align:center;color:#999;padding:30px;">暂无出货记录</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allStockOut = records;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
 }
 
-async function saveStock() {
+function filterStockOutTable(keyword) {
+  const rows = document.querySelectorAll('#stockout-table tbody tr');
+  keyword = keyword.toLowerCase();
+  rows.forEach(r => { r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none'; });
+}
+
+function showStockOutModal() {
+  const html = `
+    <h3>📤 新增出货</h3>
+    <div class="form-group"><label class="form-label">物品名称 *</label><input class="form-input" id="s-name" placeholder="如：羊肉、啤酒"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">分类</label>
+        <select class="form-input" id="s-cat">
+          ${['肉类','蔬菜','酒水','调料','餐具','其他'].map(c => `<option>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">单位</label>
+        <select class="form-input" id="s-unit">
+          ${['斤','件','箱','瓶','袋','个','公斤'].map(u => `<option>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">数量 *</label><input class="form-input" type="number" id="s-qty"></div>
+      <div class="form-group"><label class="form-label">出货单价（元）</label><input class="form-input" type="number" id="s-price"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">毛利（元）*</label><input class="form-input" type="number" id="s-profit" value="0"></div>
+      <div class="form-group"><label class="form-label">毛利率（自动）</label><input class="form-input" id="s-rate" readonly style="background:#f3f4f6;"></div>
+    </div>
+    <div class="form-group"><label class="form-label">去向/用途</label><input class="form-input" id="s-supplier" placeholder="卖给谁、用在哪里"></div>
+    <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="s-note"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveStock('out')">保存</button>
+    </div>
+  `;
+  showModalBox(html);
+  // 自动算毛利率
+  setTimeout(() => {
+    const calc = () => {
+      const price = parseFloat(document.getElementById('s-price').value) || 0;
+      const profit = parseFloat(document.getElementById('s-profit').value) || 0;
+      const rate = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
+      document.getElementById('s-rate').value = rate + '%';
+    };
+    document.getElementById('s-price').addEventListener('input', calc);
+    document.getElementById('s-profit').addEventListener('input', calc);
+  }, 100);
+}
+
+// 通用保存/删除
+async function saveStock(type) {
   const name = document.getElementById('s-name').value.trim();
   const qty = parseFloat(document.getElementById('s-qty').value);
   if (!name || !qty) { alert('请填写名称和数量！'); return; }
 
-  const type = document.getElementById('s-type').value;
   const unitPrice = parseFloat(document.getElementById('s-price').value) || 0;
   const totalPrice = qty * unitPrice;
-  const profit = type === 'out' ? (parseFloat(document.getElementById('s-profit').value) || 0) : 0;
+  const profit = type === 'out' ? (parseFloat(document.getElementById('s-profit').value) || 0) * qty : 0;
 
   try {
     await SUPA.create('restaurant_stock', {
@@ -1645,17 +1785,19 @@ async function saveStock() {
     });
     alert('✅ 保存成功！');
     closeModal();
-    renderStock();
+    if (type === 'in') renderStockIn();
+    else renderStockOut();
   } catch (e) {
     alert('保存失败：' + e.message);
   }
 }
 
-async function deleteStock(id) {
+async function deleteStock(id, type) {
   if (!confirm('确定删除这条记录？')) return;
   try {
     await SUPA.remove('restaurant_stock', id);
-    renderStock();
+    if (type === 'in') renderStockIn();
+    else renderStockOut();
   } catch (e) {
     alert('删除失败：' + e.message);
   }
