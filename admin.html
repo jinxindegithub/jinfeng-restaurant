@@ -256,6 +256,7 @@ const menuItems = [
   { id: 'pos', name: '点餐收银', icon: '🍽️' },
   { id: 'orders', name: '订单管理', icon: '📋' },
   { id: 'members', name: '会员管理', icon: '💳' },
+  { id: 'employees', name: '员工管理', icon: '👥' },
   { id: 'dishes', name: '菜品管理', icon: '🍖' },
   { id: 'tables', name: '桌台设置', icon: '🪑' },
   { id: 'stats', name: '数据统计', icon: '📊' },
@@ -308,6 +309,7 @@ function renderPage() {
     case 'pos': renderPOS(); break;
     case 'orders': renderOrders(); break;
     case 'members': renderMembers(); break;
+    case 'employees': renderEmployees(); break;
     case 'dishes': renderDishes(); break;
     case 'tables': renderTableSettings(); break;
     case 'stats': renderStats(); break;
@@ -873,6 +875,210 @@ async function doRecharge(memberId) {
   } catch (e) {
     alert('充值失败：' + e.message);
   }
+}
+
+// ========== 员工管理 ==========
+async function renderEmployees() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const users = await SUPA.list('restaurant_users', 'order=id.asc');
+    area.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👥 员工管理 (${users.length})</div>
+          <button class="btn btn-warn btn-small" onclick="showEmployeeModal()">+ 添加员工</button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" placeholder="搜索姓名/账号/手机号" oninput="filterEmployees(this.value)">
+          <select class="search-select" onchange="filterEmployeeRole(this.value)">
+            <option value="">全部角色</option>
+            <option value="admin">管理员</option>
+            <option value="manager">店长</option>
+            <option value="chef">厨师</option>
+            <option value="waiter">服务员</option>
+            <option value="cashier">收银员</option>
+            <option value="ktv">KTV服务员</option>
+            <option value="staff">其他</option>
+          </select>
+        </div>
+        <table class="table" id="employees-table">
+          <thead>
+            <tr>
+              <th>工号</th>
+              <th>姓名</th>
+              <th>职位</th>
+              <th>手机号</th>
+              <th>角色</th>
+              <th>底薪</th>
+              <th>入职日期</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(u => `
+              <tr>
+                <td><b>${u.id}</b></td>
+                <td><b>${u.name || '-'}</b><br><small style="color:#999;">账号：${u.username}</small></td>
+                <td>${u.position || '-'}</td>
+                <td>${u.phone || '-'}</td>
+                <td>${employeeRoleTag(u.role)}</td>
+                <td>¥${(u.salary || 0).toFixed(2)}</td>
+                <td>${u.hire_date ? u.hire_date.slice(0,10) : '-'}</td>
+                <td>${u.status === 'active' ? '<span class="tag tag-green">在职</span>' : '<span class="tag tag-gray">离职</span>'}</td>
+                <td>
+                  <button class="btn btn-outline btn-small" onclick="editEmployee(${u.id})">编辑</button>
+                  <button class="btn btn-outline btn-small" onclick="resetEmpPwd(${u.id})">重置密码</button>
+                  ${u.username !== 'admin' ? `<button class="btn btn-danger btn-small" onclick="deleteEmployee(${u.id})">删除</button>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allEmployees = users;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
+}
+
+function employeeRoleTag(role) {
+  const map = {
+    admin: '<span class="tag tag-orange">管理员</span>',
+    manager: '<span class="tag tag-purple">店长</span>',
+    chef: '<span class="tag tag-red">厨师</span>',
+    waiter: '<span class="tag tag-blue">服务员</span>',
+    cashier: '<span class="tag tag-green">收银员</span>',
+    ktv: '<span class="tag tag-purple">KTV服务</span>',
+    staff: '<span class="tag tag-gray">其他</span>'
+  };
+  return map[role] || '<span class="tag tag-gray">员工</span>';
+}
+
+function showEmployeeModal(emp = null) {
+  const e = emp || { username: '', name: '', phone: '', role: 'waiter', position: '', salary: 0, hire_date: '', status: 'active', note: '' };
+  const dateVal = e.hire_date ? e.hire_date.slice(0,10) : new Date().toISOString().slice(0,10);
+  const html = `
+    <h3>${emp ? '✏️ 编辑员工' : '➕ 添加员工'}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">登录账号 *</label><input class="form-input" id="e-username" value="${e.username}"></div>
+      <div class="form-group"><label class="form-label">姓名 *</label><input class="form-input" id="e-name" value="${e.name || ''}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">手机号</label><input class="form-input" id="e-phone" value="${e.phone || ''}"></div>
+      <div class="form-group"><label class="form-label">职位</label><input class="form-input" id="e-position" value="${e.position || ''}" placeholder="如：烧烤师傅、服务员..."></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">角色</label>
+        <select class="form-input" id="e-role">
+          <option value="admin" ${e.role === 'admin' ? 'selected' : ''}>管理员</option>
+          <option value="manager" ${e.role === 'manager' ? 'selected' : ''}>店长</option>
+          <option value="chef" ${e.role === 'chef' ? 'selected' : ''}>厨师</option>
+          <option value="waiter" ${e.role === 'waiter' ? 'selected' : ''}>服务员</option>
+          <option value="cashier" ${e.role === 'cashier' ? 'selected' : ''}>收银员</option>
+          <option value="ktv" ${e.role === 'ktv' ? 'selected' : ''}>KTV服务员</option>
+          <option value="staff" ${e.role === 'staff' ? 'selected' : ''}>其他</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">底薪（元）</label><input class="form-input" type="number" id="e-salary" value="${e.salary || 0}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">入职日期</label><input class="form-input" type="date" id="e-hire" value="${dateVal}"></div>
+      <div class="form-group"><label class="form-label">状态</label>
+        <select class="form-input" id="e-status">
+          <option value="active" ${e.status === 'active' ? 'selected' : ''}>在职</option>
+          <option value="disabled" ${e.status === 'disabled' ? 'selected' : ''}>离职</option>
+        </select>
+      </div>
+    </div>
+    ${!emp ? '<div class="form-group"><label class="form-label">初始密码</label><input class="form-input" id="e-pwd" value="123456"></div>' : ''}
+    <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="e-note" value="${e.note || ''}"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveEmployee(${emp?.id || 'null'})">保存</button>
+    </div>
+  `;
+  showModalBox(html);
+}
+
+async function saveEmployee(id) {
+  const username = document.getElementById('e-username').value.trim();
+  const name = document.getElementById('e-name').value.trim();
+  if (!username || !name) { alert('请填写账号和姓名！'); return; }
+
+  const data = {
+    username,
+    name,
+    phone: document.getElementById('e-phone').value,
+    position: document.getElementById('e-position').value,
+    role: document.getElementById('e-role').value,
+    salary: parseFloat(document.getElementById('e-salary').value) || 0,
+    hire_date: document.getElementById('e-hire').value,
+    status: document.getElementById('e-status').value,
+    note: document.getElementById('e-note').value
+  };
+
+  const pwdEl = document.getElementById('e-pwd');
+  if (pwdEl) data.password = pwdEl.value;
+
+  try {
+    if (id) await SUPA.update('restaurant_users', id, data);
+    else await SUPA.create('restaurant_users', data);
+    alert('✅ 保存成功！');
+    closeModal();
+    renderEmployees();
+  } catch (e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+function editEmployee(id) {
+  const e = (window._allEmployees || []).find(x => x.id === id);
+  showEmployeeModal(e);
+}
+
+async function resetEmpPwd(id) {
+  if (!confirm('确定重置密码为 123456？')) return;
+  try {
+    await SUPA.update('restaurant_users', id, { password: '123456' });
+    alert('✅ 密码已重置为 123456');
+  } catch (e) {
+    alert('操作失败：' + e.message);
+  }
+}
+
+async function deleteEmployee(id) {
+  if (!confirm('确定删除此员工？')) return;
+  try {
+    await SUPA.remove('restaurant_users', id);
+    renderEmployees();
+  } catch (e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+function filterEmployees(keyword) {
+  const rows = document.querySelectorAll('#employees-table tbody tr');
+  keyword = keyword.toLowerCase();
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none';
+  });
+}
+
+function filterEmployeeRole(role) {
+  const rows = document.querySelectorAll('#employees-table tbody tr');
+  rows.forEach(r => {
+    const roleText = r.cells[4].textContent;
+    r.style.display = !role || roleText.includes(roleTextOf(role)) ? '' : 'none';
+  });
+}
+
+function roleTextOf(r) {
+  const map = { admin:'管理员', manager:'店长', chef:'厨师', waiter:'服务员', cashier:'收银员', ktv:'KTV服务', staff:'其他' };
+  return map[r] || '';
 }
 
 // ========== 菜品管理 ==========
