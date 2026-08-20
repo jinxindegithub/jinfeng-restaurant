@@ -281,7 +281,12 @@ function renderApp() {
       </div>
       <div class="main">
         <div class="topbar">
-          <div class="topbar-title" id="page-title">点餐收银</div>
+          <div style="display:flex;align-items:center;gap:15px;">
+            <div class="topbar-title" id="page-title">点餐收银</div>
+            <a href="index.html" style="text-decoration:none;">
+              <span class="tag tag-blue" style="cursor:pointer;font-size:12px;padding:5px 12px;">🏠 返回首页</span>
+            </a>
+          </div>
           <div class="topbar-user">
             👤 ${currentUser.name || currentUser.username}
             <span onclick="logout()">退出</span>
