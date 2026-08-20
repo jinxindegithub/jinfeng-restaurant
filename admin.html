@@ -3,1573 +3,1523 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>金烽音乐餐厅 - 管理系统</title>
+<title>金烽音乐餐吧 - 管理系统</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: #f5f5f5; color: #333;
-    padding-bottom: 60px;
-  }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#f5f5f5;color:#333;font-size:14px;}
 
-  /* 顶部标题栏 */
-  .top-bar {
-    background: linear-gradient(135deg, #ff6b35, #f72c25);
-    color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .top-bar h1 { font-size: 18px; }
-  .top-bar .user-info { font-size: 13px; display: flex; align-items: center; gap: 8px; }
-  .logout-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px; }
+/* 登录页 */
+.login-page{min-height:100vh;background:linear-gradient(135deg,#ff6b35 0%,#f72c25 40%,#9d0208 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:#fff;border-radius:20px;padding:30px 25px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.login-logo{text-align:center;margin-bottom:20px;}
+.login-logo-icon{font-size:50px;margin-bottom:10px;}
+.login-title{font-size:22px;font-weight:bold;color:#d32f2f;margin-bottom:5px;}
+.login-sub{font-size:13px;color:#888;}
+.form-group{margin-bottom:15px;}
+.form-label{font-size:13px;color:#555;margin-bottom:6px;display:block;}
+.form-input{width:100%;padding:12px 15px;border:1px solid #ddd;border-radius:10px;font-size:14px;outline:none;transition:border 0.3s;}
+.form-input:focus{border-color:#ff6b35;}
+.btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;}
+.btn-primary{background:linear-gradient(135deg,#ff6b35,#f72c25);color:#fff;}
+.btn-warn{background:#ff9800;color:#fff;padding:8px 14px;font-size:13px;width:auto;border-radius:8px;}
+.btn-success{background:#4caf50;color:#fff;}
+.btn-danger{background:#f44336;color:#fff;padding:8px 14px;font-size:13px;width:auto;border-radius:8px;}
+.btn-outline{background:#fff;color:#666;border:1px solid #ddd;padding:8px 14px;font-size:13px;width:auto;border-radius:8px;}
+.btn-small{padding:6px 12px;font-size:12px;width:auto;border-radius:6px;}
 
-  /* 顶部导航卡片 */
-  .page-nav {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-    padding: 15px; background: white; margin-bottom: 10px;
-  }
-  .nav-card {
-    text-align: center; padding: 15px 5px; border-radius: 10px; cursor: pointer;
-    background: #fff5f0;
-  }
-  .nav-card.active { background: linear-gradient(135deg, #ff6b35, #f72c25); color: white; }
-  .nav-icon { font-size: 26px; margin-bottom: 5px; }
-  .nav-label { font-size: 12px; }
+/* 主框架 */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:200px;background:linear-gradient(180deg,#1a0f05,#2d1810);color:#fff;padding:15px 0;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100;}
+.sidebar-logo{padding:15px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.1);}
+.sidebar-logo h2{font-size:16px;color:#ffcc80;}
+.sidebar-logo p{font-size:11px;color:#888;margin-top:3px;}
+.menu-item{padding:12px 20px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:10px;transition:all 0.2s;}
+.menu-item:hover{background:rgba(255,107,53,0.1);}
+.menu-item.active{background:linear-gradient(90deg,rgba(255,107,53,0.3),transparent);border-left:3px solid #ff6b35;color:#ffcc80;}
+.menu-icon{font-size:18px;width:20px;text-align:center;}
 
-  /* 页面切换 */
-  .page { display: none; padding: 10px; }
-  .page.active { display: block; }
+.main{flex:1;margin-left:200px;}
+.topbar{background:#fff;padding:15px 25px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:18px;font-weight:bold;color:#333;}
+.topbar-user{font-size:13px;color:#666;}
+.topbar-user span{margin-left:10px;cursor:pointer;color:#ff6b35;}
 
-  /* 卡片 */
-  .card {
-    background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  }
+.content{padding:20px 25px;}
+.page{display:none;}
+.page.active{display:block;}
 
-  /* 统计数据 */
-  .stats-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-  }
-  .stat-card {
-    background: linear-gradient(135deg, #fff5f0, #ffe0d0);
-    border-radius: 10px; padding: 15px; text-align: center;
-  }
-  .stat-card.green { background: linear-gradient(135deg, #f0fff0, #d0ffd0); }
-  .stat-card.blue { background: linear-gradient(135deg, #f0f5ff, #d0e0ff); }
-  .stat-card.purple { background: linear-gradient(135deg, #fff0ff, #ffd0ff); }
-  .stat-value { font-size: 24px; font-weight: bold; color: #ff6b35; margin-bottom: 5px; }
-  .stat-card.green .stat-value { color: #2e7d32; }
-  .stat-card.blue .stat-value { color: #1565c0; }
-  .stat-card.purple .stat-value { color: #7b1fa2; }
-  .stat-label { font-size: 12px; color: #666; }
+/* 卡片 */
+.card{background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+.card-title{font-size:16px;font-weight:bold;}
 
-  /* 桌台网格 */
-  .table-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-  }
-  .table-card {
-    background: white; border-radius: 10px; padding: 15px 10px; text-align: center;
-    cursor: pointer; border: 2px solid #e0e0e0; transition: all 0.2s;
-    position: relative;
-  }
-  .table-card:active { transform: scale(0.95); }
-  .table-card.idle { border-color: #4caf50; background: #f1f8e9; }
-  .table-card.using { border-color: #ff6b35; background: #fff3e0; }
-  .table-card.reserved { border-color: #ff9800; background: #fff8e1; }
-  .table-card.cleaning { border-color: #9e9e9e; background: #f5f5f5; }
-  .table-icon { font-size: 28px; margin-bottom: 5px; }
-  .table-name { font-size: 13px; font-weight: bold; margin-bottom: 3px; }
-  .table-info { font-size: 11px; color: #666; }
-  .table-amount {
-    position: absolute; top: 5px; right: 5px;
-    font-size: 11px; font-weight: bold; color: #ff6b35;
-    background: rgba(255,255,255,0.8); padding: 2px 6px; border-radius: 8px;
-  }
+/* 数据统计卡片 */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;}
+.stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.stat-label{font-size:13px;color:#888;margin-bottom:8px;}
+.stat-value{font-size:26px;font-weight:bold;color:#d32f2f;}
+.stat-unit{font-size:13px;color:#888;margin-left:3px;font-weight:normal;}
+.stat-icon{float:right;font-size:30px;opacity:0.3;}
 
-  /* 分类筛选 */
-  .cat-tabs {
-    display: flex; overflow-x: auto; gap: 8px; padding: 10px 0;
-    scrollbar-width: none;
-  }
-  .cat-tabs::-webkit-scrollbar { display: none; }
-  .cat-tab {
-    flex-shrink: 0; padding: 8px 16px; border-radius: 20px;
-    background: #f0f0f0; font-size: 13px; cursor: pointer;
-  }
-  .cat-tab.active { background: #ff6b35; color: white; }
+/* 表格 */
+.table{width:100%;border-collapse:collapse;}
+.table th,.table td{padding:12px;text-align:left;border-bottom:1px solid #eee;font-size:13px;}
+.table th{background:#fafafa;font-weight:600;color:#666;}
+.table tr:hover{background:#fafafa;}
+.tag{display:inline-block;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:500;}
+.tag-green{background:#e8f5e9;color:#2e7d32;}
+.tag-red{background:#ffebee;color:#c62828;}
+.tag-orange{background:#fff3e0;color:#e65100;}
+.tag-blue{background:#e3f2fd;color:#1565c0;}
+.tag-gray{background:#f5f5f5;color:#666;}
+.tag-purple{background:#f3e5f5;color:#6a1b9a;}
 
-  /* 菜品网格 */
-  .menu-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-  }
-  .menu-item {
-    background: white; border-radius: 10px; padding: 10px;
-    display: flex; gap: 10px; border: 1px solid #eee;
-  }
-  .menu-img {
-    width: 60px; height: 60px; border-radius: 8px;
-    background: linear-gradient(135deg, #ff6b35, #ff9500);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px; flex-shrink: 0;
-  }
-  .menu-info { flex: 1; min-width: 0; }
-  .menu-name { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
-  .menu-price { font-size: 14px; color: #ff6b35; font-weight: bold; }
-  .menu-add {
-    width: 30px; height: 30px; border-radius: 50%;
-    background: #ff6b35; color: white; border: none;
-    font-size: 20px; line-height: 1; align-self: center; cursor: pointer;
-  }
+/* 搜索栏 */
+.search-bar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;}
+.search-input{padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;width:200px;}
+.search-input:focus{border-color:#ff6b35;}
+.search-select{padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;}
 
-  /* 购物车/订单详情 */
-  .cart-bar {
-    position: fixed; bottom: 60px; left: 10px; right: 10px;
-    background: linear-gradient(135deg, #ff6b35, #f72c25);
-    color: white; padding: 12px 15px; border-radius: 50px;
-    display: flex; justify-content: space-between; align-items: center;
-    z-index: 50; box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4);
-  }
-  .cart-info { font-size: 14px; }
-  .cart-count {
-    display: inline-block; background: white; color: #ff6b35;
-    width: 22px; height: 22px; border-radius: 50%;
-    text-align: center; line-height: 22px; font-weight: bold;
-    margin-right: 8px; font-size: 12px;
-  }
-  .cart-total { font-size: 18px; font-weight: bold; }
-  .cart-btn {
-    background: white; color: #ff6b35; border: none;
-    padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px;
-  }
+/* 弹窗 */
+.modal-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:#fff;border-radius:15px;padding:25px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal h3{margin-bottom:20px;color:#d32f2f;}
+.modal-btns{display:flex;gap:10px;margin-top:20px;}
+.modal-btns .btn{flex:1;}
 
-  /* 列表 */
-  .list-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 0; border-bottom: 1px solid #f0f0f0;
-  }
-  .list-item:last-child { border-bottom: none; }
-  .list-left { flex: 1; }
-  .list-title { font-size: 15px; font-weight: 500; margin-bottom: 3px; }
-  .list-sub { font-size: 12px; color: #888; }
-  .list-right { text-align: right; }
-  .list-amount { font-size: 16px; font-weight: bold; color: #ff6b35; }
-  .list-status { font-size: 11px; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+/* 桌台网格 */
+.table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:15px;}
+.table-card{background:#fff;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;border:2px solid transparent;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.table-card:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,0.1);}
+.table-card.free{border-color:#4caf50;}
+.table-card.occupied{border-color:#f44336;background:#fff5f5;}
+.table-card.ktv{border-color:#9c27b0;}
+.table-card.ktv.occupied{background:#faf5ff;}
+.table-name{font-size:15px;font-weight:bold;margin-bottom:5px;}
+.table-info{font-size:12px;color:#888;}
+.table-amount{font-size:14px;color:#f44336;font-weight:bold;margin-top:5px;}
+.table-status-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;margin-top:5px;}
+.free .table-status-tag{background:#e8f5e9;color:#2e7d32;}
+.occupied .table-status-tag{background:#ffebee;color:#c62828;}
 
-  /* 按钮 */
-  .btn {
-    padding: 8px 16px; border: none; border-radius: 8px;
-    font-size: 13px; cursor: pointer;
-  }
-  .btn-primary { background: #ff6b35; color: white; }
-  .btn-green { background: #4caf50; color: white; }
-  .btn-danger { background: #f44336; color: white; }
-  .btn-gray { background: #e0e0e0; color: #333; }
-  .btn-block { width: 100%; padding: 12px; font-size: 15px; }
+/* 点餐弹窗 */
+.order-modal{max-width:900px;display:grid;grid-template-columns:1fr 340px;gap:20px;padding:0;}
+.order-dishes{padding:20px;border-right:1px solid #eee;}
+.order-cart{padding:20px;background:#fafafa;border-radius:0 15px 15px 0;}
+.category-tabs{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap;}
+.cat-tab{padding:6px 14px;background:#fff;border:1px solid #ddd;border-radius:20px;font-size:12px;cursor:pointer;}
+.cat-tab.active{background:#ff6b35;color:#fff;border-color:#ff6b35;}
+.dish-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-height:450px;overflow-y:auto;padding-right:10px;}
+.dish-item{background:#fff;border:1px solid #eee;border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;}
+.dish-item-name{font-size:13px;font-weight:500;}
+.dish-item-price{font-size:12px;color:#f44336;margin-top:3px;}
+.dish-add{background:#ff6b35;color:#fff;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
 
-  /* 弹窗 */
-  .modal-mask {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5); z-index: 1000;
-    display: flex; align-items: flex-end; justify-content: center;
-  }
-  .modal {
-    background: white; border-radius: 20px 20px 0 0;
-    width: 100%; max-height: 85vh; overflow-y: auto;
-    padding: 20px; padding-bottom: 30px;
-  }
-  .modal-title {
-    font-size: 18px; font-weight: bold; margin-bottom: 15px;
-    text-align: center;
-  }
-  .form-group { margin-bottom: 12px; }
-  .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
-  .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: 10px 12px; border: 1px solid #ddd;
-    border-radius: 8px; font-size: 14px; outline: none;
-  }
-  .form-group input:focus, .form-group select:focus { border-color: #ff6b35; }
-  .form-row { display: flex; gap: 10px; }
-  .form-row .form-group { flex: 1; }
+.cart-title{font-size:15px;font-weight:bold;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;}
+.cart-list{max-height:300px;overflow-y:auto;margin-bottom:15px;}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;}
+.cart-item-name{font-size:13px;flex:1;}
+.cart-item-price{font-size:13px;color:#f44336;margin-right:10px;}
+.cart-qty{display:flex;align-items:center;gap:8px;}
+.cart-qty button{width:24px;height:24px;border:1px solid #ddd;background:#fff;border-radius:50%;cursor:pointer;font-size:14px;}
+.cart-total{border-top:2px solid #ff6b35;padding-top:15px;}
+.cart-total-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;}
+.cart-total-row.big{font-size:18px;font-weight:bold;color:#d32f2f;}
 
-  /* 底部导航 */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: white; border-top: 1px solid #eee;
-    display: flex; justify-content: space-around; padding: 6px 0;
-    z-index: 100;
-  }
-  .bottom-nav-item {
-    text-align: center; font-size: 10px; color: #999;
-    cursor: pointer; flex: 1; padding: 4px;
-  }
-  .bottom-nav-item.active { color: #ff6b35; }
-  .bottom-nav-icon { font-size: 20px; margin-bottom: 2px; }
+/* 会员充值 */
+.recharge-box{background:#f5f5f5;border-radius:10px;padding:15px;margin-bottom:15px;}
+.recharge-item{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.recharge-item:last-child{margin-bottom:0;}
+.recharge-label{width:80px;font-size:13px;color:#666;}
+.recharge-input{flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none;}
 
-  /* 登录页 */
-  .login-page {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #ff6b35 0%, #f72c25 50%, #9d0208 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 30px;
-  }
-  .login-logo { font-size: 60px; margin-bottom: 10px; }
-  .login-title { font-size: 28px; font-weight: bold; color: white; margin-bottom: 5px; }
-  .login-subtitle { color: rgba(255,255,255,0.7); margin-bottom: 40px; font-size: 14px; }
-  .login-box {
-    background: white; border-radius: 20px; padding: 30px;
-    width: 100%; max-width: 360px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-  }
-  .login-box h2 { text-align: center; margin-bottom: 20px; color: #ff6b35; }
-
-  /* 搜索框 */
-  .search-box {
-    display: flex; gap: 8px; margin-bottom: 10px;
-  }
-  .search-box input {
-    flex: 1; padding: 10px 15px; border: 1px solid #ddd;
-    border-radius: 25px; font-size: 14px; outline: none;
-  }
-
-  /* 数量加减 */
-  .qty-control {
-    display: flex; align-items: center; gap: 10px;
-  }
-  .qty-btn {
-    width: 28px; height: 28px; border-radius: 50%;
-    border: 1px solid #ff6b35; background: white; color: #ff6b35;
-    font-size: 16px; cursor: pointer;
-  }
-  .qty-num { font-size: 16px; font-weight: bold; min-width: 20px; text-align: center; }
-
-  /* 标签 */
-  .tag {
-    display: inline-block; padding: 3px 8px; border-radius: 4px;
-    font-size: 11px; margin-right: 5px;
-  }
-  .tag-green { background: #e8f5e9; color: #2e7d32; }
-  .tag-red { background: #ffebee; color: #c62828; }
-  .tag-orange { background: #fff3e0; color: #e65100; }
-  .tag-blue { background: #e3f2fd; color: #1565c0; }
-
-  /* 会员等级 */
-  .member-level.gold { color: #ffd700; }
-  .member-level.silver { color: #c0c0c0; }
-  .member-level.normal { color: #999; }
-
-  /* 空状态 */
-  .empty {
-    text-align: center; color: #999; padding: 40px 20px; font-size: 14px;
-  }
+/* 响应式 */
+@media (max-width: 768px) {
+  .sidebar{width:60px;}
+  .sidebar-logo h2,.sidebar-logo p,.menu-item span:last-child{display:none;}
+  .main{margin-left:60px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .order-modal{grid-template-columns:1fr;max-width:100%;}
+  .order-dishes{border-right:none;border-bottom:1px solid #eee;}
+  .order-cart{border-radius:0 0 15px 15px;}
+}
 </style>
 </head>
 <body>
 
-<!-- 登录页 -->
-<div id="login-page" class="login-page" style="display:none;">
-  <div class="login-logo">🎵</div>
-  <div class="login-title">金烽音乐餐厅</div>
-  <div class="login-subtitle">烧烤 · KTV · 音乐 · 美酒</div>
-  <div class="login-box">
-    <h2>员工登录</h2>
-    <div class="form-group">
-      <label>账号</label>
-      <input id="login-username" placeholder="请输入账号" value="admin">
-    </div>
-    <div class="form-group">
-      <label>密码</label>
-      <input id="login-password" type="password" placeholder="请输入密码" value="123456">
-    </div>
-    <button class="btn btn-primary btn-block" onclick="doLogin()" style="margin-top:10px;">登 录</button>
-  </div>
-</div>
-
-<!-- 主界面 -->
-<div id="main-app" style="display:none;">
-  <div class="top-bar">
-    <h1>🎵 金烽音乐餐厅</h1>
-    <div class="user-info">
-      <span id="top-username">admin</span>
-      <button class="logout-btn" onclick="doLogout()">退出</button>
-    </div>
-  </div>
-
-  <!-- 快捷导航 -->
-  <div class="page-nav">
-    <div class="nav-card active" onclick="switchPage('tables')">
-      <div class="nav-icon">🍽️</div>
-      <div class="nav-label">点餐收银</div>
-    </div>
-    <div class="nav-card" onclick="switchPage('orders')">
-      <div class="nav-icon">📋</div>
-      <div class="nav-label">订单管理</div>
-    </div>
-    <div class="nav-card" onclick="switchPage('members')">
-      <div class="nav-icon">💳</div>
-      <div class="nav-label">会员管理</div>
-    </div>
-    <div class="nav-card" onclick="switchPage('stats')">
-      <div class="nav-icon">📊</div>
-      <div class="nav-label">数据统计</div>
-    </div>
-    <div class="nav-card" onclick="switchPage('menu')">
-      <div class="nav-icon">🍖</div>
-      <div class="nav-label">菜品管理</div>
-    </div>
-    <div class="nav-card" onclick="switchPage('tables-setting')">
-      <div class="nav-icon">🪑</div>
-      <div class="nav-label">桌台设置</div>
-    </div>
-    <div class="nav-card" onclick="switchPage('ktv')">
-      <div class="nav-icon">🎤</div>
-      <div class="nav-label">KTV计时</div>
-    </div>
-    <div class="nav-card" onclick="switchPage('settings')">
-      <div class="nav-icon">⚙️</div>
-      <div class="nav-label">系统设置</div>
-    </div>
-  </div>
-
-  <!-- 1. 点餐收银 -->
-  <div id="page-tables" class="page active">
-    <div class="card" style="padding-bottom: 5px;">
-      <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">🏠 桌台状态</div>
-      <div id="table-grid" class="table-grid"></div>
-    </div>
-  </div>
-
-  <!-- 点餐弹窗 -->
-  <div id="order-modal"></div>
-
-  <!-- 2. 订单管理 -->
-  <div id="page-orders" class="page">
-    <div class="search-box">
-      <input id="order-search" placeholder="🔍 搜索订单号/桌台..." oninput="renderOrders()">
-    </div>
-    <div id="order-list"></div>
-  </div>
-
-  <!-- 3. 会员管理 -->
-  <div id="page-members" class="page">
-    <div style="display:flex; gap:10px; margin-bottom:10px;">
-      <input id="member-search" placeholder="🔍 搜索会员姓名/电话" style="flex:1; padding:10px 15px; border:1px solid #ddd; border-radius:25px; font-size:14px; outline:none;" oninput="renderMembers()">
-      <button class="btn btn-primary" onclick="showMemberModal()">+ 新增</button>
-    </div>
-    <div id="member-list"></div>
-  </div>
-
-  <!-- 4. 数据统计 -->
-  <div id="page-stats" class="page">
-    <div class="card">
-      <div style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">📊 今日统计</div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-today-amount">¥0</div>
-          <div class="stat-label">今日营业额</div>
-        </div>
-        <div class="stat-card green">
-          <div class="stat-value" id="stat-today-orders">0</div>
-          <div class="stat-label">今日订单</div>
-        </div>
-        <div class="stat-card blue">
-          <div class="stat-value" id="stat-today-people">0</div>
-          <div class="stat-label">接待人数</div>
-        </div>
-        <div class="stat-card purple">
-          <div class="stat-value" id="stat-today-avg">¥0</div>
-          <div class="stat-label">人均消费</div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">📈 总览</div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-total-orders">0</div>
-          <div class="stat-label">总订单数</div>
-        </div>
-        <div class="stat-card green">
-          <div class="stat-value" id="stat-total-amount">¥0</div>
-          <div class="stat-label">总营业额</div>
-        </div>
-        <div class="stat-card blue">
-          <div class="stat-value" id="stat-member-count">0</div>
-          <div class="stat-label">会员总数</div>
-        </div>
-        <div class="stat-card purple">
-          <div class="stat-value" id="stat-total-recharge">¥0</div>
-          <div class="stat-label">会员充值</div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">🏆 热销菜品 TOP5</div>
-      <div id="top-dishes"></div>
-    </div>
-  </div>
-
-  <!-- 5. 菜品管理 -->
-  <div id="page-menu" class="page">
-    <div style="display:flex; gap:10px; margin-bottom:10px;">
-      <input id="menu-search" placeholder="🔍 搜索菜品" style="flex:1; padding:10px 15px; border:1px solid #ddd; border-radius:25px; font-size:14px; outline:none;" oninput="renderMenuMgmt()">
-      <button class="btn btn-primary" onclick="showDishModal()">+ 新增</button>
-    </div>
-    <div class="cat-tabs" id="menu-cat-tabs"></div>
-    <div id="menu-mgmt-list"></div>
-  </div>
-
-  <!-- 6. 桌台设置 -->
-  <div id="page-tables-setting" class="page">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <div style="font-size: 16px; font-weight: bold;">🪑 桌台/包厢管理</div>
-      <button class="btn btn-primary" onclick="showTableModal()">+ 新增</button>
-    </div>
-    <div id="table-setting-list"></div>
-  </div>
-
-  <!-- 7. KTV计时 -->
-  <div id="page-ktv" class="page">
-    <div class="card">
-      <div style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">🎤 KTV包厢计时</div>
-      <div id="ktv-list"></div>
-    </div>
-  </div>
-
-  <!-- 8. 系统设置 -->
-  <div id="page-settings" class="page">
-    <div class="card">
-      <div style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">⚙️ 系统设置</div>
-      <div class="form-group">
-        <label>餐厅名称</label>
-        <input id="set-shop-name" placeholder="金烽音乐餐厅">
-      </div>
-      <div class="form-group">
-        <label>联系电话</label>
-        <input id="set-shop-phone" placeholder="餐厅电话">
-      </div>
-      <div class="form-group">
-        <label>餐厅地址</label>
-        <input id="set-shop-address" placeholder="餐厅地址">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>KTV时薪（元/小时）</label>
-          <input type="number" id="set-ktv-fee" value="50">
-        </div>
-        <div class="form-group">
-          <label>员工折扣</label>
-          <input type="number" step="0.01" id="set-discount" value="0.85">
-        </div>
-      </div>
-      <button class="btn btn-primary btn-block" onclick="saveSettings()">保存设置</button>
-    </div>
-    <div class="card">
-      <div style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">👤 账号管理</div>
-      <div id="staff-list"></div>
-      <button class="btn btn-gray btn-block" style="margin-top:10px;" onclick="showStaffModal()">+ 新增员工账号</button>
-    </div>
-  </div>
-</div>
+<div id="app"></div>
 
 <script>
 // ========== Supabase 配置 ==========
 const SUPABASE_URL = 'https://ztymkrkfiroqodahxueg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0eW1rcmtmaXJvcW9kYWh4dWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjM3NzQ4OTAsImV4cCI6MjAzOTM1MDg5MH0.abcdefghijklmnopqrstuvwxyz1234567890'; // 占位，实际会被替换
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0eW1rcmtmaXJvcW9kYWh4dWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjM5MTYwNzMsImV4cCI6MjAzOTQ5MjA3M30.b7vC5tJxY8fY0eZ6hQkqFqYkqFqYkqFqYkqFqYkqFqY';
 
-// 先用 localStorage 模式，后续可切换到真实 Supabase
-const USE_SUPABASE = false;
-
-const DB = {
-  // 从 localStorage 读取
-  get(key, def) {
-    try {
-      return JSON.parse(localStorage.getItem('jinfeng_' + key)) || def;
-    } catch(e) { return def; }
+const SUPA = {
+  async api(path, method = 'GET', body = null) {
+    const url = `${SUPABASE_URL}/rest/v1/${path}`;
+    const opts = {
+      method,
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`API Error: ${res.status} ${text}`);
+    }
+    if (res.status === 204) return null;
+    return res.json();
   },
-  set(key, val) {
-    localStorage.setItem('jinfeng_' + key, JSON.stringify(val));
+  list(table, filter = '') {
+    return this.api(`${table}${filter ? '?' + filter : ''}`);
   },
-  // 获取自增ID
-  nextId(list) {
-    return list.length ? Math.max(...list.map(i => i.id)) + 1 : 1;
+  get(table, id) {
+    return this.api(`${table}?id=eq.${id}`).then(r => r[0]);
+  },
+  create(table, data) {
+    return this.api(table, 'POST', data);
+  },
+  update(table, id, data) {
+    return this.api(`${table}?id=eq.${id}`, 'PATCH', data);
+  },
+  remove(table, id) {
+    return this.api(`${table}?id=eq.${id}`, 'DELETE');
   }
 };
 
-// 初始化数据
-function initData() {
-  if (!DB.get('users', null)) {
-    DB.set('users', [
-      { id: 1, username: 'admin', password: '123456', real_name: '超级管理员', role: 'admin' }
-    ]);
-  }
-  if (!DB.get('tables', null)) {
-    DB.set('tables', [
-      { id: 1, name: '大厅A1', type: 'hall', max_people: 6, status: 'idle', ktv_fee: 0 },
-      { id: 2, name: '大厅A2', type: 'hall', max_people: 6, status: 'idle', ktv_fee: 0 },
-      { id: 3, name: '大厅A3', type: 'hall', max_people: 6, status: 'idle', ktv_fee: 0 },
-      { id: 4, name: '大厅B1', type: 'hall', max_people: 8, status: 'idle', ktv_fee: 0 },
-      { id: 5, name: '小包1号', type: 'ktv', max_people: 6, status: 'idle', ktv_fee: 58, has_ktv: true },
-      { id: 6, name: '小包2号', type: 'ktv', max_people: 6, status: 'idle', ktv_fee: 58, has_ktv: true },
-      { id: 7, name: '中包1号', type: 'ktv', max_people: 12, status: 'idle', ktv_fee: 88, has_ktv: true },
-      { id: 8, name: '中包2号', type: 'ktv', max_people: 12, status: 'idle', ktv_fee: 88, has_ktv: true },
-      { id: 9, name: '大包VIP1号', type: 'ktv', max_people: 20, status: 'idle', ktv_fee: 168, has_ktv: true },
-    ]);
-  }
-  if (!DB.get('categories', null)) {
-    DB.set('categories', [
-      { id: 1, name: '烧烤类', type: 'food', icon: '🍢' },
-      { id: 2, name: '热菜类', type: 'food', icon: '🍲' },
-      { id: 3, name: '凉菜类', type: 'food', icon: '🥗' },
-      { id: 4, name: '主食类', type: 'food', icon: '🍚' },
-      { id: 5, name: '啤酒', type: 'drink', icon: '🍺' },
-      { id: 6, name: '白酒', type: 'drink', icon: '🍶' },
-      { id: 7, name: '红酒', type: 'drink', icon: '🍷' },
-      { id: 8, name: '饮料', type: 'drink', icon: '🥤' },
-    ]);
-  }
-  if (!DB.get('menu_items', null)) {
-    DB.set('menu_items', [
-      { id: 1, name: '羊肉串', category_id: 1, price: 3.00, unit: '串', is_hot: true, is_recommend: true, available: true },
-      { id: 2, name: '牛肉串', category_id: 1, price: 4.00, unit: '串', is_hot: true, is_recommend: true, available: true },
-      { id: 3, name: '烤鸡翅', category_id: 1, price: 8.00, unit: '个', is_hot: true, available: true },
-      { id: 4, name: '烤生蚝', category_id: 1, price: 10.00, unit: '个', is_hot: true, is_recommend: true, available: true },
-      { id: 5, name: '烤茄子', category_id: 1, price: 12.00, unit: '份', available: true },
-      { id: 6, name: '烤韭菜', category_id: 1, price: 8.00, unit: '份', available: true },
-      { id: 7, name: '烤馒头片', category_id: 1, price: 3.00, unit: '串', available: true },
-      { id: 8, name: '烤鱼', category_id: 1, price: 68.00, unit: '条', is_recommend: true, available: true },
-      { id: 9, name: '麻辣小龙虾', category_id: 2, price: 88.00, unit: '份', is_hot: true, is_recommend: true, available: true },
-      { id: 10, name: '爆炒花蛤', category_id: 2, price: 28.00, unit: '份', available: true },
-      { id: 11, name: '凉拌黄瓜', category_id: 3, price: 12.00, unit: '份', available: true },
-      { id: 12, name: '凉拌木耳', category_id: 3, price: 15.00, unit: '份', available: true },
-      { id: 13, name: '皮蛋豆腐', category_id: 3, price: 12.00, unit: '份', available: true },
-      { id: 14, name: '炒面', category_id: 4, price: 18.00, unit: '份', available: true },
-      { id: 15, name: '蛋炒饭', category_id: 4, price: 15.00, unit: '份', available: true },
-      { id: 16, name: '青岛啤酒', category_id: 5, price: 8.00, unit: '瓶', is_hot: true, available: true },
-      { id: 17, name: '百威啤酒', category_id: 5, price: 12.00, unit: '瓶', is_hot: true, is_recommend: true, available: true },
-      { id: 18, name: '科罗娜', category_id: 5, price: 18.00, unit: '瓶', available: true },
-      { id: 19, name: '1664白啤', category_id: 5, price: 20.00, unit: '瓶', available: true },
-      { id: 20, name: '勇闯天涯', category_id: 5, price: 10.00, unit: '瓶', available: true },
-      { id: 21, name: '牛栏山二锅头', category_id: 6, price: 25.00, unit: '瓶', available: true },
-      { id: 22, name: '劲酒', category_id: 6, price: 35.00, unit: '瓶', available: true },
-      { id: 23, name: '长城干红', category_id: 7, price: 88.00, unit: '瓶', available: true },
-      { id: 24, name: '张裕解百纳', category_id: 7, price: 128.00, unit: '瓶', available: true },
-      { id: 25, name: '可乐', category_id: 8, price: 6.00, unit: '瓶', available: true },
-      { id: 26, name: '雪碧', category_id: 8, price: 6.00, unit: '瓶', available: true },
-      { id: 27, name: '果粒橙', category_id: 8, price: 8.00, unit: '瓶', available: true },
-      { id: 28, name: '椰汁', category_id: 8, price: 10.00, unit: '瓶', available: true },
-      { id: 29, name: '矿泉水', category_id: 8, price: 3.00, unit: '瓶', available: true },
-    ]);
-  }
-  if (!DB.get('orders', null)) DB.set('orders', []);
-  if (!DB.get('members', null)) {
-    DB.set('members', [
-      { id: 1, name: '测试会员', phone: '13800138000', level: 'normal', balance: 500, total_consume: 0, total_visits: 0 }
-    ]);
-  }
-  if (!DB.get('settings', null)) {
-    DB.set('settings', {
-      shop_name: '金烽音乐餐厅',
-      shop_phone: '',
-      shop_address: '',
-      ktv_hourly_fee: 50,
-      staff_discount: 0.85
-    });
+// ========== 登录状态 ==========
+let currentUser = JSON.parse(localStorage.getItem('jf_currentUser') || 'null');
+
+// ========== 页面渲染 ==========
+function renderLogin() {
+  document.getElementById('app').innerHTML = `
+    <div class="login-page">
+      <div class="login-box">
+        <div class="login-logo">
+          <div class="login-logo-icon">🎵</div>
+          <div class="login-title">金烽音乐餐吧</div>
+          <div class="login-sub">后台管理系统</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">账号</label>
+          <input class="form-input" id="login-user" placeholder="请输入账号" value="admin">
+        </div>
+        <div class="form-group">
+          <label class="form-label">密码</label>
+          <input class="form-input" id="login-pass" type="password" placeholder="请输入密码" value="123456">
+        </div>
+        <button class="btn btn-primary" onclick="doLogin()">登 录</button>
+        <p style="text-align:center;color:#aaa;font-size:12px;margin-top:15px;">金烽音乐餐吧 · 内部管理系统</p>
+      </div>
+    </div>
+  `;
+  document.getElementById('login-pass').addEventListener('keypress', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  if (!username || !password) { alert('请输入账号密码！'); return; }
+
+  try {
+    const users = await SUPA.list('restaurant_users', `username=eq.${username}`);
+    if (users.length === 0) { alert('账号不存在！'); return; }
+    const user = users[0];
+    if (user.password !== password) { alert('密码错误！'); return; }
+    if (user.status !== 'active') { alert('账号已停用！'); return; }
+
+    currentUser = user;
+    localStorage.setItem('jf_currentUser', JSON.stringify(user));
+    renderApp();
+  } catch (e) {
+    alert('登录失败：' + e.message);
   }
 }
 
-// ========== 当前状态 ==========
-let currentUser = null;
-let currentPage = 'tables';
-let currentTableId = null;
-let currentOrder = null; // 正在点餐的订单 { table_id, table_name, items: [], ... }
-let currentCat = 1; // 菜品分类
-let currentMenuCat = 1; // 菜品管理分类
-
-// ========== 登录 ==========
-function doLogin() {
-  const username = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value.trim();
-  const users = DB.get('users', []);
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) {
-    alert('账号或密码错误！');
-    return;
-  }
-  currentUser = user;
-  DB.set('current_user', user);
-  showApp();
-}
-
-function doLogout() {
-  if (!confirm('确定退出登录？')) return;
+function logout() {
   currentUser = null;
-  DB.set('current_user', null);
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('login-page').style.display = 'flex';
+  localStorage.removeItem('jf_currentUser');
+  renderLogin();
 }
 
-function showApp() {
-  document.getElementById('login-page').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
-  document.getElementById('top-username').textContent = currentUser.real_name || currentUser.username;
-  renderTables();
+// ========== 主界面 ==========
+let currentPage = 'pos';
+
+const menuItems = [
+  { id: 'pos', name: '点餐收银', icon: '🍽️' },
+  { id: 'orders', name: '订单管理', icon: '📋' },
+  { id: 'members', name: '会员管理', icon: '💳' },
+  { id: 'dishes', name: '菜品管理', icon: '🍖' },
+  { id: 'tables', name: '桌台设置', icon: '🪑' },
+  { id: 'stats', name: '数据统计', icon: '📊' },
+  { id: 'stock', name: '库存进货', icon: '📦' },
+  { id: 'settings', name: '系统设置', icon: '⚙️' },
+];
+
+function renderApp() {
+  document.getElementById('app').innerHTML = `
+    <div class="app">
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <h2>🎵 金烽音乐餐吧</h2>
+          <p>管理系统</p>
+        </div>
+        ${menuItems.map(m => `
+          <div class="menu-item ${m.id === currentPage ? 'active' : ''}" onclick="switchPage('${m.id}')">
+            <span class="menu-icon">${m.icon}</span>
+            <span>${m.name}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <div class="topbar-title" id="page-title">点餐收银</div>
+          <div class="topbar-user">
+            👤 ${currentUser.name || currentUser.username}
+            <span onclick="logout()">退出</span>
+          </div>
+        </div>
+        <div class="content" id="content-area"></div>
+      </div>
+    </div>
+  `;
+  renderPage();
 }
 
-// ========== 页面切换 ==========
-function switchPage(page) {
-  currentPage = page;
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.querySelectorAll('.nav-card').forEach(c => c.classList.remove('active'));
-  event?.currentTarget?.classList?.add('active');
-
-  // 对应页面渲染
-  if (page === 'tables') renderTables();
-  if (page === 'orders') renderOrders();
-  if (page === 'members') renderMembers();
-  if (page === 'stats') renderStats();
-  if (page === 'menu') renderMenuMgmt();
-  if (page === 'tables-setting') renderTableSetting();
-  if (page === 'ktv') renderKtv();
-  if (page === 'settings') renderSettings();
+function switchPage(id) {
+  currentPage = id;
+  document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const item = menuItems.find(m => m.id === id);
+  document.getElementById('page-title').textContent = item.name;
+  renderPage();
 }
 
-// ========== 1. 桌台/点餐 ==========
-function renderTables() {
-  const tables = DB.get('tables', []);
-  const orders = DB.get('orders', []);
+function renderPage() {
+  const area = document.getElementById('content-area');
+  switch (currentPage) {
+    case 'pos': renderPOS(); break;
+    case 'orders': renderOrders(); break;
+    case 'members': renderMembers(); break;
+    case 'dishes': renderDishes(); break;
+    case 'tables': renderTableSettings(); break;
+    case 'stats': renderStats(); break;
+    case 'stock': renderStock(); break;
+    case 'settings': renderSettings(); break;
+  }
+}
 
-  const grid = document.getElementById('table-grid');
-  grid.innerHTML = tables.map(t => {
-    const order = orders.find(o => o.table_id === t.id && o.status === 'dining');
-    let icon = '🍽️';
-    if (t.type === 'ktv') icon = '🎤';
-    let amountText = '';
-    if (order) {
-      const total = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
-      amountText = `<div class="table-amount">¥${total.toFixed(0)}</div>`;
-    }
-    const statusText = {
-      idle: '空闲', using: '使用中', reserved: '已预订', cleaning: '清扫中'
-    }[t.status] || t.status;
-    return `
-      <div class="table-card ${t.status}" onclick="openTable(${t.id})">
-        ${amountText}
-        <div class="table-icon">${icon}</div>
-        <div class="table-name">${t.name}</div>
-        <div class="table-info">${t.max_people}人 · ${statusText}</div>
+// ========== 点餐收银 ==========
+let currentTable = null;
+let cartItems = [];
+
+async function renderPOS() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const [tables, dishes] = await Promise.all([
+      SUPA.list('restaurant_tables', 'order=type.asc,sort.asc'),
+      SUPA.list('restaurant_dishes', 'status=eq.on&order=category.asc,sort.asc')
+    ]);
+
+    // 统计进行中的订单
+    const openOrders = await SUPA.list('restaurant_orders', 'status=eq.open&select=id,table_id,total,order_no');
+    const orderMap = {};
+    openOrders.forEach(o => { orderMap[o.table_id] = o; });
+
+    area.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🪑 桌台状态</div>
+          <div style="display:flex;gap:8px;">
+            <span class="tag tag-green">● 空闲</span>
+            <span class="tag tag-red">● 占用</span>
+            <span class="tag tag-purple">● KTV</span>
+          </div>
+        </div>
+        <div class="table-grid">
+          ${tables.map(t => {
+            const isOccupied = !!orderMap[t.id];
+            const order = orderMap[t.id];
+            const isKTV = t.type === 'ktv';
+            return `
+              <div class="table-card ${isKTV ? 'ktv' : ''} ${isOccupied ? 'occupied' : 'free'}"
+                   onclick="openTable(${t.id}, '${t.name}', ${isKTV}, ${t.hourly_rate || 0})">
+                <div class="table-name">${t.name}</div>
+                <div class="table-info">${t.capacity}人</div>
+                <div class="table-amount">${isOccupied ? '¥' + (order?.total || 0).toFixed(2) : ''}</div>
+                <div class="table-status-tag">${isOccupied ? '用餐中' : '空闲'}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
       </div>
     `;
-  }).join('');
+
+    window._allDishes = dishes;
+    window._allTables = tables;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
 }
 
-function openTable(tableId) {
-  const tables = DB.get('tables', []);
-  const table = tables.find(t => t.id === tableId);
-  if (!table) return;
-
-  const orders = DB.get('orders', []);
-  let order = orders.find(o => o.table_id === tableId && o.status === 'dining');
-
-  if (!order) {
-    // 开新单
-    const count = orders.length + 1;
-    const orderNo = 'D' + new Date().toISOString().slice(2,10).replace(/-/g,'') + String(count).padStart(4, '0');
-    order = {
-      id: DB.nextId(orders),
-      order_no: orderNo,
-      table_id: tableId,
-      table_name: table.name,
-      customer_count: 1,
-      items: [],
-      total_amount: 0,
-      status: 'dining',
-      staff_id: currentUser.id,
-      staff_name: currentUser.real_name,
-      ktv_start_time: table.type === 'ktv' ? new Date().toISOString() : null,
-      ktv_fee: 0,
-      created_at: new Date().toISOString()
-    };
-    // 更新桌台状态
-    table.status = 'using';
-    DB.set('tables', tables);
-    orders.push(order);
-    DB.set('orders', orders);
-  }
-
-  currentOrder = order;
-  currentTableId = tableId;
-  currentCat = 1;
+function openTable(tableId, tableName, isKTV, hourlyRate) {
+  currentTable = { id: tableId, name: tableName, isKTV, hourlyRate };
+  cartItems = [];
   showOrderModal();
 }
 
 function showOrderModal() {
-  const cats = DB.get('categories', []);
-  const order = currentOrder;
-  const table = DB.get('tables', []).find(t => t.id === order.table_id);
+  const dishes = window._allDishes || [];
+  const categories = [...new Set(dishes.map(d => d.category))];
+  let activeCat = categories[0] || '';
 
-  const html = `
+  const modalHtml = `
     <div class="modal-mask" onclick="if(event.target===this)closeOrderModal()">
-      <div class="modal" style="max-height: 90vh; padding: 0;">
-        <div style="padding: 15px; background: linear-gradient(135deg, #ff6b35, #f72c25); color: white; border-radius: 0;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div style="font-size: 18px; font-weight: bold;">${order.table_name}</div>
-              <div style="font-size: 12px; opacity: 0.9;">单号：${order.order_no}</div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 20px; font-weight: bold;">¥${calcOrderTotal().toFixed(2)}</div>
-              <div style="font-size: 11px; opacity: 0.8;">${order.items.reduce((s,i)=>s+i.quantity,0)} 件商品</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="padding: 10px; max-height: calc(90vh - 200px); overflow-y: auto;">
-          <div class="cat-tabs" id="order-cats">
-            ${cats.map(c => `
-              <div class="cat-tab ${c.id === currentCat ? 'active' : ''}" onclick="selectCat(${c.id})">${c.icon} ${c.name}</div>
+      <div class="modal order-modal" id="order-modal-box">
+        <div class="order-dishes">
+          <h3 style="margin-bottom:10px;">🍽️ ${currentTable.name}</h3>
+          <div class="category-tabs" id="cat-tabs">
+            ${categories.map(c => `
+              <div class="cat-tab ${c === activeCat ? 'active' : ''}" onclick="switchCat('${c}')">${c}</div>
             `).join('')}
           </div>
-          <div class="menu-grid" id="order-menu"></div>
-        </div>
-
-        <div style="padding: 10px; border-top: 1px solid #eee; display: flex; gap: 10px;">
-          <button class="btn btn-gray" style="flex:1;" onclick="showCartDetail()">🛒 购物车 (${order.items.reduce((s,i)=>s+i.quantity,0)})</button>
-          <button class="btn btn-green" style="flex:1;" onclick="checkoutOrder()">💰 结账</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.getElementById('order-modal').innerHTML = html;
-  renderOrderMenu();
-}
-
-function selectCat(catId) {
-  currentCat = catId;
-  document.querySelectorAll('#order-cats .cat-tab').forEach(c => c.classList.remove('active'));
-  event?.currentTarget?.classList?.add('active');
-  renderOrderMenu();
-}
-
-function renderOrderMenu() {
-  const items = DB.get('menu_items', []).filter(i => i.category_id === currentCat && i.available);
-  const orderItems = currentOrder.items;
-
-  const grid = document.getElementById('order-menu');
-  grid.innerHTML = items.map(item => {
-    const oi = orderItems.find(o => o.item_id === item.id);
-    const qty = oi ? oi.quantity : 0;
-    return `
-      <div class="menu-item">
-        <div class="menu-img">${getCatIcon(item.category_id)}</div>
-        <div class="menu-info">
-          <div class="menu-name">${item.name}</div>
-          <div class="menu-price">¥${item.price.toFixed(2)} <span style="font-size:11px; color:#999;">/${item.unit}</span></div>
-        </div>
-        ${qty > 0 ? `
-          <div class="qty-control">
-            <button class="qty-btn" onclick="decreaseItem(${item.id})">-</button>
-            <span class="qty-num">${qty}</span>
-            <button class="qty-btn" style="background:#ff6b35; color:white; border:none;" onclick="increaseItem(${item.id})">+</button>
-          </div>
-        ` : `
-          <button class="menu-add" onclick="increaseItem(${item.id})">+</button>
-        `}
-      </div>
-    `;
-  }).join('');
-}
-
-function getCatIcon(catId) {
-  const cats = DB.get('categories', []);
-  const cat = cats.find(c => c.id === catId);
-  return cat ? cat.icon : '🍽️';
-}
-
-function increaseItem(itemId) {
-  const items = DB.get('menu_items', []);
-  const item = items.find(i => i.id === itemId);
-  if (!item) return;
-
-  const oi = currentOrder.items.find(o => o.item_id === itemId);
-  if (oi) {
-    oi.quantity++;
-    oi.amount = oi.price * oi.quantity;
-  } else {
-    currentOrder.items.push({
-      id: Date.now(),
-      item_id: item.id,
-      item_name: item.name,
-      price: item.price,
-      quantity: 1,
-      amount: item.price
-    });
-  }
-  saveCurrentOrder();
-  showOrderModal(); // 刷新
-}
-
-function decreaseItem(itemId) {
-  const idx = currentOrder.items.findIndex(o => o.item_id === itemId);
-  if (idx === -1) return;
-  currentOrder.items[idx].quantity--;
-  if (currentOrder.items[idx].quantity <= 0) {
-    currentOrder.items.splice(idx, 1);
-  } else {
-    currentOrder.items[idx].amount = currentOrder.items[idx].price * currentOrder.items[idx].quantity;
-  }
-  saveCurrentOrder();
-  showOrderModal();
-}
-
-function calcOrderTotal() {
-  const foodTotal = currentOrder.items.reduce((s, i) => s + i.amount, 0);
-  let ktvFee = 0;
-  // KTV 费用
-  const table = DB.get('tables', []).find(t => t.id === currentOrder.table_id);
-  if (table?.has_ktv && currentOrder.ktv_start_time) {
-    const hours = (Date.now() - new Date(currentOrder.ktv_start_time)) / 3600000;
-    const minHours = Math.ceil(hours);
-    ktvFee = minHours * (table.ktv_fee || 50);
-  }
-  return foodTotal + ktvFee;
-}
-
-function saveCurrentOrder() {
-  const orders = DB.get('orders', []);
-  const idx = orders.findIndex(o => o.id === currentOrder.id);
-  currentOrder.total_amount = calcOrderTotal();
-  if (idx > -1) orders[idx] = currentOrder;
-  else orders.push(currentOrder);
-  DB.set('orders', orders);
-}
-
-function closeOrderModal() {
-  document.getElementById('order-modal').innerHTML = '';
-  renderTables();
-}
-
-// ========== 购物车详情 ==========
-function showCartDetail() {
-  const order = currentOrder;
-  const table = DB.get('tables', []).find(t => t.id === order.table_id);
-  let ktvFee = 0, ktvHours = 0;
-  if (table?.has_ktv && order.ktv_start_time) {
-    ktvHours = ((Date.now() - new Date(order.ktv_start_time)) / 3600000);
-    ktvFee = Math.ceil(ktvHours) * (table.ktv_fee || 50);
-  }
-
-  const html = `
-    <div class="modal-mask" onclick="if(event.target===this)closeOrderModal()">
-      <div class="modal">
-        <div class="modal-title">🛒 订单详情</div>
-        <div style="font-size: 13px; color: #666; margin-bottom: 10px;">桌台：${order.table_name} · 单号：${order.order_no}</div>
-
-        <div style="max-height: 50vh; overflow-y: auto; margin-bottom: 15px;">
-          ${order.items.length === 0 ? '<div class="empty">还没点单，去加点菜吧~</div>' : ''}
-          ${order.items.map(item => `
-            <div class="list-item">
-              <div class="list-left">
-                <div class="list-title">${item.item_name}</div>
-                <div class="list-sub">¥${item.price.toFixed(2)} × ${item.quantity}</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div class="list-amount">¥${item.amount.toFixed(2)}</div>
-                <div class="qty-control">
-                  <button class="qty-btn" onclick="decreaseItem(${item.item_id}); showCartDetail();">-</button>
-                  <span class="qty-num">${item.quantity}</span>
-                  <button class="qty-btn" style="background:#ff6b35; color:white; border:none;" onclick="increaseItem(${item.item_id}); showCartDetail();">+</button>
+          <div class="dish-list" id="dish-list">
+            ${dishes.filter(d => d.category === activeCat).map(d => `
+              <div class="dish-item">
+                <div>
+                  <div class="dish-item-name">${d.name}${d.is_hot ? ' <span style="color:#f44336;font-size:10px;">🔥</span>' : ''}</div>
+                  <div class="dish-item-price">¥${d.price}/${d.unit}</div>
                 </div>
+                <button class="dish-add" onclick="addDishToCart(${d.id}, '${d.name}', ${d.price})">+</button>
               </div>
-            </div>
-          `).join('')}
-
-          ${table?.has_ktv && ktvFee > 0 ? `
-            <div class="list-item">
-              <div class="list-left">
-                <div class="list-title">🎤 KTV包厢费</div>
-                <div class="list-sub">${(table.ktv_fee||50)}元/小时 × ${Math.ceil(ktvHours)}小时</div>
-              </div>
-              <div class="list-amount">¥${ktvFee.toFixed(2)}</div>
-            </div>
-          ` : ''}
+            `).join('')}
+          </div>
         </div>
-
-        <div style="display:flex; justify-content:space-between; padding: 10px 0; border-top: 2px solid #ff6b35; font-size: 16px; font-weight: bold;">
-          <span>合计</span>
-          <span style="color: #ff6b35; font-size: 22px;">¥${(order.items.reduce((s,i)=>s+i.amount,0) + ktvFee).toFixed(2)}</span>
-        </div>
-
-        <div style="display:flex; gap: 10px; margin-top: 15px;">
-          <button class="btn btn-gray" style="flex:1;" onclick="closeOrderModal()">返回</button>
-          <button class="btn btn-green" style="flex:2;" onclick="checkoutOrder()">💰 立即结账</button>
+        <div class="order-cart">
+          <div class="cart-title">
+            🛒 已点菜品
+            <span style="font-size:12px;color:#888;font-weight:normal;" id="cart-count">0 份</span>
+          </div>
+          <div class="cart-list" id="cart-list">
+            <div style="text-align:center;color:#aaa;padding:30px 0;">暂无菜品</div>
+          </div>
+          <div class="cart-total">
+            <div class="cart-total-row"><span>商品合计</span><span id="cart-subtotal">¥0.00</span></div>
+            <div class="cart-total-row big"><span>应付金额</span><span id="cart-total">¥0.00</span></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:15px;">
+            <button class="btn btn-outline" style="flex:1;" onclick="closeOrderModal()">取消</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="submitOrder()">下单结账</button>
+          </div>
         </div>
       </div>
     </div>
   `;
-  document.getElementById('order-modal').innerHTML = html;
+
+  const div = document.createElement('div');
+  div.id = 'order-modal';
+  div.innerHTML = modalHtml;
+  document.body.appendChild(div);
 }
 
-// ========== 结账 ==========
-function checkoutOrder() {
-  const order = currentOrder;
-  if (order.items.length === 0) {
-    alert('还没点任何菜品！');
-    return;
-  }
-  if (!confirm(`确认结账？\n\n桌台：${order.table_name}\n合计：¥${order.total_amount.toFixed(2)}`)) return;
-
-  const orders = DB.get('orders', []);
-  const idx = orders.findIndex(o => o.id === order.id);
-  const total = order.total_amount;
-
-  orders[idx].status = 'settled';
-  orders[idx].settled_at = new Date().toISOString();
-  orders[idx].actual_amount = total;
-  orders[idx].paid_amount = total;
-  DB.set('orders', orders);
-
-  // 更新桌台状态
-  const tables = DB.get('tables', []);
-  const t = tables.find(t => t.id === order.table_id);
-  if (t) { t.status = 'cleaning'; DB.set('tables', tables); }
-
-  alert(`✅ 结账成功！\n\n实收：¥${total.toFixed(2)}`);
-  closeOrderModal();
-}
-
-// ========== 2. 订单管理 ==========
-function renderOrders() {
-  const search = document.getElementById('order-search')?.value?.trim().toLowerCase() || '';
-  let orders = DB.get('orders', []).slice().reverse();
-
-  if (search) {
-    orders = orders.filter(o =>
-      o.order_no.toLowerCase().includes(search) ||
-      (o.table_name || '').includes(search)
-    );
-  }
-
-  const list = document.getElementById('order-list');
-  if (!orders.length) { list.innerHTML = '<div class="card empty">暂无订单记录</div>'; return; }
-
-  list.innerHTML = orders.map(o => {
-    const statusMap = { dining: '用餐中', settled: '已结账', canceled: '已取消' };
-    const statusClass = { dining: 'tag-orange', settled: 'tag-green', canceled: 'tag-red' };
-    const itemsText = o.items.map(i => `${i.item_name}×${i.quantity}`).join('、');
-    return `
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-          <div style="font-weight:bold;">${o.table_name || '外带'}</div>
-          <span class="tag ${statusClass[o.status] || 'tag-blue'}">${statusMap[o.status] || o.status}</span>
-        </div>
-        <div style="font-size:12px; color:#999; margin-bottom:5px;">单号：${o.order_no}</div>
-        <div style="font-size:13px; color:#666; margin-bottom:8px; line-height:1.5;">${itemsText || '无商品'}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:12px; color:#999;">${new Date(o.created_at).toLocaleString()}</div>
-          <div style="font-size:18px; font-weight:bold; color:#ff6b35;">¥${o.total_amount.toFixed(2)}</div>
-        </div>
-        ${o.status === 'dining' ? `
-          <div style="margin-top:10px; display:flex; gap:8px;">
-            <button class="btn btn-primary" style="flex:1;" onclick="switchPage('tables'); openTable(${o.table_id});">继续点餐</button>
-            <button class="btn btn-danger" style="flex:1;" onclick="cancelOrder(${o.id})">作废订单</button>
-          </div>
-        ` : ''}
+function switchCat(cat) {
+  document.querySelectorAll('.cat-tab').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const dishes = (window._allDishes || []).filter(d => d.category === cat);
+  document.getElementById('dish-list').innerHTML = dishes.map(d => `
+    <div class="dish-item">
+      <div>
+        <div class="dish-item-name">${d.name}${d.is_hot ? ' <span style="color:#f44336;font-size:10px;">🔥</span>' : ''}</div>
+        <div class="dish-item-price">¥${d.price}/${d.unit}</div>
       </div>
-    `;
-  }).join('');
-}
-
-function cancelOrder(id) {
-  if (!confirm('确定作废此订单？')) return;
-  const orders = DB.get('orders', []);
-  const order = orders.find(o => o.id === id);
-  if (!order) return;
-  order.status = 'canceled';
-  DB.set('orders', orders);
-  // 释放桌台
-  if (order.table_id) {
-    const tables = DB.get('tables', []);
-    const t = tables.find(t => t.id === order.table_id);
-    if (t) { t.status = 'idle'; DB.set('tables', tables); }
-  }
-  renderOrders();
-  alert('已作废');
-}
-
-// ========== 3. 会员管理 ==========
-function renderMembers() {
-  const search = document.getElementById('member-search')?.value?.trim().toLowerCase() || '';
-  let members = DB.get('members', []).slice().sort((a, b) => b.total_consume - a.total_consume);
-
-  if (search) {
-    members = members.filter(m =>
-      m.name.toLowerCase().includes(search) ||
-      m.phone.includes(search)
-    );
-  }
-
-  const list = document.getElementById('member-list');
-  if (!members.length) { list.innerHTML = '<div class="card empty">暂无会员</div>'; return; }
-
-  list.innerHTML = members.map(m => {
-    const levelMap = { normal: '普通会员', silver: '银卡会员', gold: '金卡会员' };
-    const levelClass = { normal: 'normal', silver: 'silver', gold: 'gold' };
-    return `
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:40px; height:40px; border-radius:50%; background:#ff6b35; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold;">${m.name.charAt(0)}</div>
-            <div>
-              <div style="font-weight:bold; font-size:15px;">${m.name}</div>
-              <div class="member-level ${levelClass[m.level]}" style="font-size:12px;">${levelMap[m.level] || m.level}</div>
-            </div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:18px; font-weight:bold; color:#ff6b35;">¥${m.balance.toFixed(2)}</div>
-            <div style="font-size:11px; color:#999;">余额</div>
-          </div>
-        </div>
-        <div style="font-size:12px; color:#666; margin-bottom:8px;">📱 ${m.phone} · 消费${m.total_visits}次 · 累计¥${m.total_consume.toFixed(2)}</div>
-        <div style="display:flex; gap:8px;">
-          <button class="btn btn-primary" style="flex:1;" onclick="rechargeMember(${m.id})">💰 充值</button>
-          <button class="btn btn-gray" style="flex:1;" onclick="showMemberModal(${m.id})">✏️ 编辑</button>
-          <button class="btn btn-danger" onclick="delMember(${m.id})">删除</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function showMemberModal(id = null) {
-  const members = DB.get('members', []);
-  const m = id ? members.find(x => x.id === id) : null;
-  const html = `
-    <div class="modal-mask" onclick="if(event.target===this)document.getElementById('member-modal').innerHTML=''">
-      <div class="modal">
-        <div class="modal-title">${m ? '编辑会员' : '新增会员'}</div>
-        <input type="hidden" id="mem-id" value="${id || ''}">
-        <div class="form-group">
-          <label>姓名</label>
-          <input id="mem-name" value="${m?.name || ''}" placeholder="会员姓名">
-        </div>
-        <div class="form-group">
-          <label>手机号</label>
-          <input id="mem-phone" value="${m?.phone || ''}" placeholder="手机号">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>会员等级</label>
-            <select id="mem-level">
-              <option value="normal" ${m?.level === 'normal' ? 'selected' : ''}>普通会员</option>
-              <option value="silver" ${m?.level === 'silver' ? 'selected' : ''}>银卡会员</option>
-              <option value="gold" ${m?.level === 'gold' ? 'selected' : ''}>金卡会员</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>余额</label>
-            <input type="number" id="mem-balance" value="${m?.balance || 0}">
-          </div>
-        </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-          <button class="btn btn-gray" style="flex:1;" onclick="document.getElementById('member-modal').innerHTML=''">取消</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="saveMember()">保存</button>
-        </div>
-      </div>
+      <button class="dish-add" onclick="addDishToCart(${d.id}, '${d.name}', ${d.price})">+</button>
     </div>
-  `;
-  if (!document.getElementById('member-modal')) {
-    const div = document.createElement('div');
-    div.id = 'member-modal';
-    document.body.appendChild(div);
-  }
-  document.getElementById('member-modal').innerHTML = html;
+  `).join('');
 }
 
-function saveMember() {
-  const id = document.getElementById('mem-id').value;
-  const name = document.getElementById('mem-name').value.trim();
-  const phone = document.getElementById('mem-phone').value.trim();
-  const level = document.getElementById('mem-level').value;
-  const balance = parseFloat(document.getElementById('mem-balance').value) || 0;
-
-  if (!name || !phone) { alert('请填写姓名和手机号'); return; }
-
-  const members = DB.get('members', []);
-  if (id) {
-    const m = members.find(x => x.id === parseInt(id));
-    if (m) { m.name = name; m.phone = phone; m.level = level; m.balance = balance; }
+function addDishToCart(id, name, price) {
+  const existing = cartItems.find(i => i.dish_id === id);
+  if (existing) {
+    existing.quantity++;
+    existing.amount = existing.price * existing.quantity;
   } else {
-    members.push({ id: DB.nextId(members), name, phone, level, balance, total_consume: 0, total_visits: 0 });
+    cartItems.push({ dish_id: id, dish_name: name, price, quantity: 1, amount: price });
   }
-  DB.set('members', members);
-  document.getElementById('member-modal').innerHTML = '';
-  renderMembers();
-  alert('保存成功');
+  updateCartView();
 }
 
-function rechargeMember(id) {
-  const amount = prompt('请输入充值金额：', '100');
-  if (!amount || isNaN(amount)) return;
-  const members = DB.get('members', []);
-  const m = members.find(x => x.id === id);
-  if (!m) return;
-  m.balance += parseFloat(amount);
-  DB.set('members', members);
-  renderMembers();
-  alert(`充值成功！\n\n充值：¥${amount}\n余额：¥${m.balance.toFixed(2)}`);
+function removeDishFromCart(dishId) {
+  const idx = cartItems.findIndex(i => i.dish_id === dishId);
+  if (idx === -1) return;
+  cartItems[idx].quantity--;
+  cartItems[idx].amount = cartItems[idx].price * cartItems[idx].quantity;
+  if (cartItems[idx].quantity <= 0) cartItems.splice(idx, 1);
+  updateCartView();
 }
 
-function delMember(id) {
-  if (!confirm('确定删除此会员？')) return;
-  const members = DB.get('members', []).filter(m => m.id !== id);
-  DB.set('members', members);
-  renderMembers();
-}
+function updateCartView() {
+  const listEl = document.getElementById('cart-list');
+  if (!listEl) return;
 
-// ========== 4. 数据统计 ==========
-function renderStats() {
-  const orders = DB.get('orders', []);
-  const settledOrders = orders.filter(o => o.status === 'settled');
-  const today = new Date().toDateString();
-  const todayOrders = settledOrders.filter(o => new Date(o.settled_at).toDateString() === today);
-  const todayAmount = todayOrders.reduce((s, o) => s + o.actual_amount, 0);
-  const todayPeople = todayOrders.reduce((s, o) => s + (o.customer_count || 0), 0);
+  const totalQty = cartItems.reduce((s, i) => s + i.quantity, 0);
+  const subtotal = cartItems.reduce((s, i) => s + i.amount, 0);
 
-  document.getElementById('stat-today-amount').textContent = '¥' + todayAmount.toFixed(0);
-  document.getElementById('stat-today-orders').textContent = todayOrders.length;
-  document.getElementById('stat-today-people').textContent = todayPeople;
-  document.getElementById('stat-today-avg').textContent = '¥' + (todayOrders.length ? (todayAmount / todayOrders.length).toFixed(0) : 0);
+  document.getElementById('cart-count').textContent = totalQty + ' 份';
+  document.getElementById('cart-subtotal').textContent = '¥' + subtotal.toFixed(2);
+  document.getElementById('cart-total').textContent = '¥' + subtotal.toFixed(2);
 
-  const totalAmount = settledOrders.reduce((s, o) => s + o.actual_amount, 0);
-  document.getElementById('stat-total-orders').textContent = settledOrders.length;
-  document.getElementById('stat-total-amount').textContent = '¥' + totalAmount.toFixed(0);
-  document.getElementById('stat-member-count').textContent = DB.get('members', []).length;
-  document.getElementById('stat-total-recharge').textContent = '¥' + DB.get('members', []).reduce((s, m) => s + m.balance, 0).toFixed(0);
-
-  // 热销TOP5
-  const dishCount = {};
-  settledOrders.forEach(o => {
-    o.items.forEach(i => {
-      dishCount[i.item_name] = (dishCount[i.item_name] || 0) + i.quantity;
-    });
-  });
-  const top5 = Object.entries(dishCount)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  const topEl = document.getElementById('top-dishes');
-  if (!top5.length) {
-    topEl.innerHTML = '<div class="empty">暂无销售数据</div>';
+  if (cartItems.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;color:#aaa;padding:30px 0;">暂无菜品</div>';
   } else {
-    topEl.innerHTML = top5.map(([name, qty], i) => `
-      <div class="list-item">
-        <div class="list-left" style="display:flex; align-items:center; gap:10px;">
-          <div style="width:24px; height:24px; border-radius:50%; background:${i===0?'#ffd700':i===1?'#c0c0c0':i===2?'#cd7f32':'#e0e0e0'}; color:${i<3?'white':'#666'}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold;">${i+1}</div>
-          <span>${name}</span>
-        </div>
-        <div class="list-right">
-          <div style="color:#ff6b35; font-weight:bold;">${qty} 份</div>
+    listEl.innerHTML = cartItems.map(i => `
+      <div class="cart-item">
+        <div class="cart-item-name">${i.dish_name}</div>
+        <div class="cart-item-price">¥${i.amount.toFixed(2)}</div>
+        <div class="cart-qty">
+          <button onclick="removeDishFromCart(${i.dish_id})">-</button>
+          <span>${i.quantity}</span>
+          <button onclick="addDishToCart(${i.dish_id}, '${i.dish_name}', ${i.price})">+</button>
         </div>
       </div>
     `).join('');
   }
 }
 
-// ========== 5. 菜品管理 ==========
-function renderMenuMgmt() {
-  const search = document.getElementById('menu-search')?.value?.trim().toLowerCase() || '';
-  const cats = DB.get('categories', []);
-  let items = DB.get('menu_items', []);
-
-  // 分类标签
-  document.getElementById('menu-cat-tabs').innerHTML = cats.map(c => `
-    <div class="cat-tab ${c.id === currentMenuCat ? 'active' : ''}" onclick="currentMenuCat=${c.id}; renderMenuMgmt();">${c.icon} ${c.name}</div>
-  `).join('');
-
-  items = items.filter(i => i.category_id === currentMenuCat);
-  if (search) items = items.filter(i => i.name.toLowerCase().includes(search));
-
-  const list = document.getElementById('menu-mgmt-list');
-  if (!items.length) { list.innerHTML = '<div class="card empty">暂无菜品</div>'; return; }
-
-  list.innerHTML = `<div class="card" style="padding:10px;">` + items.map(item => `
-    <div class="list-item">
-      <div class="list-left" style="display:flex; align-items:center; gap:10px;">
-        <div style="width:40px; height:40px; border-radius:8px; background:#fff0e0; display:flex; align-items:center; justify-content:center; font-size:22px;">${getCatIcon(item.category_id)}</div>
-        <div>
-          <div class="list-title">${item.name} ${item.is_hot ? '<span class="tag tag-red">热销</span>' : ''} ${item.is_recommend ? '<span class="tag tag-orange">推荐</span>' : ''}</div>
-          <div class="list-sub">¥${item.price}/${item.unit} · ${item.available ? '在售' : '停售'}</div>
-        </div>
-      </div>
-      <div style="display:flex; gap:5px;">
-        <button class="btn btn-gray" style="padding:6px 10px; font-size:12px;" onclick="showDishModal(${item.id})">编辑</button>
-        <button class="btn btn-danger" style="padding:6px 10px; font-size:12px;" onclick="delDish(${item.id})">删除</button>
-      </div>
-    </div>
-  `).join('') + `</div>`;
+function closeOrderModal() {
+  const m = document.getElementById('order-modal');
+  if (m) m.remove();
 }
 
-function showDishModal(id = null) {
-  const items = DB.get('menu_items', []);
-  const cats = DB.get('categories', []);
-  const item = id ? items.find(i => i.id === id) : null;
-  const html = `
-    <div class="modal-mask" onclick="if(event.target===this)document.getElementById('dish-modal').innerHTML=''">
-      <div class="modal">
-        <div class="modal-title">${item ? '编辑菜品' : '新增菜品'}</div>
-        <input type="hidden" id="dish-id" value="${id || ''}">
-        <div class="form-group">
-          <label>菜品名称</label>
-          <input id="dish-name" value="${item?.name || ''}" placeholder="菜品名称">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>分类</label>
-            <select id="dish-cat">
-              ${cats.map(c => `<option value="${c.id}" ${item?.category_id === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>单位</label>
-            <input id="dish-unit" value="${item?.unit || '份'}">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>价格</label>
-            <input type="number" step="0.01" id="dish-price" value="${item?.price || 0}">
-          </div>
-          <div class="form-group">
-            <label>库存</label>
-            <input type="number" id="dish-stock" value="${item?.stock || 9999}">
-          </div>
-        </div>
-        <div style="display:flex; gap:15px; margin-bottom:12px;">
-          <label style="display:flex; align-items:center; gap:5px; font-size:13px;">
-            <input type="checkbox" id="dish-hot" ${item?.is_hot ? 'checked' : ''}> 热销
-          </label>
-          <label style="display:flex; align-items:center; gap:5px; font-size:13px;">
-            <input type="checkbox" id="dish-recommend" ${item?.is_recommend ? 'checked' : ''}> 推荐
-          </label>
-          <label style="display:flex; align-items:center; gap:5px; font-size:13px;">
-            <input type="checkbox" id="dish-available" ${item?.available !== false ? 'checked' : ''}> 在售
-          </label>
-        </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-          <button class="btn btn-gray" style="flex:1;" onclick="document.getElementById('dish-modal').innerHTML=''">取消</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="saveDish()">保存</button>
-        </div>
-      </div>
-    </div>
-  `;
-  if (!document.getElementById('dish-modal')) {
-    const div = document.createElement('div');
-    div.id = 'dish-modal';
-    document.body.appendChild(div);
-  }
-  document.getElementById('dish-modal').innerHTML = html;
-}
+async function submitOrder() {
+  if (cartItems.length === 0) { alert('请先点菜品！'); return; }
+  if (!confirm(`确认下单？共 ${cartItems.reduce((s,i)=>s+i.quantity,0)} 份，¥${cartItems.reduce((s,i)=>s+i.amount,0).toFixed(2)}`)) return;
 
-function saveDish() {
-  const id = document.getElementById('dish-id').value;
-  const name = document.getElementById('dish-name').value.trim();
-  const category_id = parseInt(document.getElementById('dish-cat').value);
-  const price = parseFloat(document.getElementById('dish-price').value) || 0;
-  const unit = document.getElementById('dish-unit').value.trim() || '份';
-  const stock = parseInt(document.getElementById('dish-stock').value) || 9999;
-  const is_hot = document.getElementById('dish-hot').checked;
-  const is_recommend = document.getElementById('dish-recommend').checked;
-  const available = document.getElementById('dish-available').checked;
+  const subtotal = cartItems.reduce((s, i) => s + i.amount, 0);
+  const orderNo = 'JF' + Date.now().toString().slice(-10);
 
-  if (!name) { alert('请填写菜品名称'); return; }
+  try {
+    // 创建订单
+    const orders = await SUPA.create('restaurant_orders', {
+      order_no: orderNo,
+      table_id: currentTable.id,
+      table_name: currentTable.name,
+      order_type: currentTable.isKTV ? 'ktv' : 'dine_in',
+      subtotal: subtotal,
+      total: subtotal,
+      paid_amount: subtotal,
+      pay_method: 'cash',
+      status: 'open',
+      server_id: currentUser.id,
+      server_name: currentUser.name || currentUser.username
+    });
 
-  const items = DB.get('menu_items', []);
-  if (id) {
-    const item = items.find(i => i.id === parseInt(id));
-    if (item) Object.assign(item, { name, category_id, price, unit, stock, is_hot, is_recommend, available });
-  } else {
-    items.push({ id: DB.nextId(items), name, category_id, price, unit, stock, is_hot, is_recommend, available });
-  }
-  DB.set('menu_items', items);
-  document.getElementById('dish-modal').innerHTML = '';
-  renderMenuMgmt();
-  alert('保存成功');
-}
+    const orderId = orders[0].id;
 
-function delDish(id) {
-  if (!confirm('确定删除此菜品？')) return;
-  const items = DB.get('menu_items', []).filter(i => i.id !== id);
-  DB.set('menu_items', items);
-  renderMenuMgmt();
-}
-
-// ========== 6. 桌台设置 ==========
-function renderTableSetting() {
-  const tables = DB.get('tables', []);
-  const list = document.getElementById('table-setting-list');
-
-  const byType = { hall: [], ktv: [] };
-  tables.forEach(t => byType[t.type]?.push(t) || (byType[t.type] = [t]));
-
-  list.innerHTML = `
-    <div class="card">
-      <div style="font-weight:bold; margin-bottom:10px;">🍽️ 餐桌</div>
-      ${(byType.hall || []).map(t => `
-        <div class="list-item">
-          <div class="list-left">
-            <div class="list-title">${t.name}</div>
-            <div class="list-sub">${t.max_people}人 · ${t.status === 'idle' ? '空闲' : t.status === 'using' ? '使用中' : t.status}</div>
-          </div>
-          <div style="display:flex; gap:5px;">
-            <button class="btn btn-gray" style="padding:6px 10px; font-size:12px;" onclick="showTableModal(${t.id})">编辑</button>
-            <button class="btn btn-danger" style="padding:6px 10px; font-size:12px;" onclick="delTable(${t.id})">删除</button>
-          </div>
-        </div>
-      `).join('') || '<div class="empty">暂无</div>'}
-    </div>
-    <div class="card">
-      <div style="font-weight:bold; margin-bottom:10px;">🎤 KTV包厢</div>
-      ${(byType.ktv || []).map(t => `
-        <div class="list-item">
-          <div class="list-left">
-            <div class="list-title">${t.name}</div>
-            <div class="list-sub">${t.max_people}人 · ¥${t.ktv_fee}/小时 · ${t.status === 'idle' ? '空闲' : t.status === 'using' ? '使用中' : t.status}</div>
-          </div>
-          <div style="display:flex; gap:5px;">
-            <button class="btn btn-gray" style="padding:6px 10px; font-size:12px;" onclick="showTableModal(${t.id})">编辑</button>
-            <button class="btn btn-danger" style="padding:6px 10px; font-size:12px;" onclick="delTable(${t.id})">删除</button>
-          </div>
-        </div>
-      `).join('') || '<div class="empty">暂无</div>'}
-    </div>
-  `;
-}
-
-function showTableModal(id = null) {
-  const tables = DB.get('tables', []);
-  const t = id ? tables.find(x => x.id === id) : null;
-  const html = `
-    <div class="modal-mask" onclick="if(event.target===this)document.getElementById('table-modal').innerHTML=''">
-      <div class="modal">
-        <div class="modal-title">${t ? '编辑' : '新增'}桌台/包厢</div>
-        <input type="hidden" id="tbl-id" value="${id || ''}">
-        <div class="form-group">
-          <label>名称</label>
-          <input id="tbl-name" value="${t?.name || ''}" placeholder="如：大厅A1 / 小包1号">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>类型</label>
-            <select id="tbl-type">
-              <option value="hall" ${t?.type === 'hall' ? 'selected' : ''}>餐桌</option>
-              <option value="ktv" ${t?.type === 'ktv' ? 'selected' : ''}>KTV包厢</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>容纳人数</label>
-            <input type="number" id="tbl-maxp" value="${t?.max_people || 6}">
-          </div>
-        </div>
-        <div class="form-group" id="ktv-fee-group" style="${t?.type === 'ktv' ? '' : 'display:none;'}">
-          <label>KTV每小时费用（元）</label>
-          <input type="number" id="tbl-ktv-fee" value="${t?.ktv_fee || 58}">
-        </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-          <button class="btn btn-gray" style="flex:1;" onclick="document.getElementById('table-modal').innerHTML=''">取消</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="saveTable()">保存</button>
-        </div>
-      </div>
-    </div>
-  `;
-  if (!document.getElementById('table-modal')) {
-    const div = document.createElement('div');
-    div.id = 'table-modal';
-    document.body.appendChild(div);
-  }
-  document.getElementById('table-modal').innerHTML = html;
-
-  // 类型切换
-  document.getElementById('tbl-type').onchange = function() {
-    document.getElementById('ktv-fee-group').style.display = this.value === 'ktv' ? '' : 'none';
-  };
-}
-
-function saveTable() {
-  const id = document.getElementById('tbl-id').value;
-  const name = document.getElementById('tbl-name').value.trim();
-  const type = document.getElementById('tbl-type').value;
-  const max_people = parseInt(document.getElementById('tbl-maxp').value) || 6;
-  const ktv_fee = parseFloat(document.getElementById('tbl-ktv-fee')?.value) || 0;
-
-  if (!name) { alert('请填写名称'); return; }
-
-  const tables = DB.get('tables', []);
-  if (id) {
-    const t = tables.find(x => x.id === parseInt(id));
-    if (t) Object.assign(t, { name, type, max_people, ktv_fee, has_ktv: type === 'ktv' });
-  } else {
-    tables.push({ id: DB.nextId(tables), name, type, max_people, status: 'idle', ktv_fee, has_ktv: type === 'ktv' });
-  }
-  DB.set('tables', tables);
-  document.getElementById('table-modal').innerHTML = '';
-  renderTableSetting();
-  alert('保存成功');
-}
-
-function delTable(id) {
-  if (!confirm('确定删除？')) return;
-  const tables = DB.get('tables', []).filter(t => t.id !== id);
-  DB.set('tables', tables);
-  renderTableSetting();
-}
-
-// ========== 7. KTV计时 ==========
-function renderKtv() {
-  const tables = DB.get('tables', []).filter(t => t.type === 'ktv');
-  const orders = DB.get('orders', []);
-  const list = document.getElementById('ktv-list');
-
-  list.innerHTML = tables.map(t => {
-    const order = orders.find(o => o.table_id === t.id && o.status === 'dining');
-    let timeText = '空闲';
-    let feeText = '';
-    if (order?.ktv_start_time) {
-      const diff = Date.now() - new Date(order.ktv_start_time);
-      const hours = diff / 3600000;
-      const h = Math.floor(hours);
-      const m = Math.floor((diff % 3600000) / 60000);
-      timeText = `${h}小时${m}分钟`;
-      feeText = `¥${(Math.ceil(hours) * t.ktv_fee).toFixed(0)}`;
+    // 创建明细
+    for (const item of cartItems) {
+      await SUPA.create('restaurant_order_items', {
+        order_id: orderId,
+        dish_id: item.dish_id,
+        dish_name: item.dish_name,
+        price: item.price,
+        quantity: item.quantity,
+        amount: item.amount
+      });
     }
-    return `
-      <div class="list-item">
-        <div class="list-left">
-          <div class="list-title">🎤 ${t.name}</div>
-          <div class="list-sub">${timeText} · ¥${t.ktv_fee}/时</div>
+
+    // 更新桌台状态
+    await SUPA.update('restaurant_tables', currentTable.id, {
+      status: 'occupied',
+      current_order_id: orderId
+    });
+
+    alert('✅ 下单成功！\n订单号：' + orderNo + '\n金额：¥' + subtotal.toFixed(2));
+    closeOrderModal();
+    renderPOS();
+  } catch (e) {
+    alert('下单失败：' + e.message);
+  }
+}
+
+// ========== 订单管理 ==========
+async function renderOrders() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const orders = await SUPA.list('restaurant_orders', 'order=created_at.desc');
+    area.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 订单列表</div>
+          <div class="search-bar" style="margin:0;">
+            <input class="search-input" placeholder="搜索订单号/桌台" oninput="filterOrders(this.value)">
+            <select class="search-select" onchange="filterOrderStatus(this.value)">
+              <option value="">全部状态</option>
+              <option value="open">进行中</option>
+              <option value="paid">已结账</option>
+              <option value="cancelled">已作废</option>
+            </select>
+          </div>
         </div>
-        <div class="list-right">
-          <div class="list-amount">${feeText}</div>
-          <div style="font-size:11px; color:#666; margin-top:3px;">${order ? '使用中' : '空闲'}</div>
+        <table class="table" id="orders-table">
+          <thead>
+            <tr>
+              <th>订单号</th>
+              <th>桌台</th>
+              <th>类型</th>
+              <th>金额</th>
+              <th>服务员</th>
+              <th>状态</th>
+              <th>时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.map(o => `
+              <tr>
+                <td>${o.order_no}</td>
+                <td>${o.table_name || '-'}</td>
+                <td>${o.order_type === 'ktv' ? '<span class="tag tag-purple">KTV</span>' : '<span class="tag tag-blue">堂食</span>'}</td>
+                <td style="color:#f44336;font-weight:bold;">¥${(o.total || 0).toFixed(2)}</td>
+                <td>${o.server_name || '-'}</td>
+                <td>${orderStatusTag(o.status)}</td>
+                <td style="font-size:12px;color:#888;">${new Date(o.created_at).toLocaleString()}</td>
+                <td>
+                  <button class="btn btn-outline btn-small" onclick="viewOrder(${o.id})">详情</button>
+                  ${o.status === 'open' ? `<button class="btn btn-warn btn-small" onclick="payOrder(${o.id})">结账</button>` : ''}
+                  ${o.status !== 'cancelled' ? `<button class="btn btn-danger btn-small" onclick="cancelOrder(${o.id})">作废</button>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allOrders = orders;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
+}
+
+function orderStatusTag(status) {
+  const map = {
+    open: '<span class="tag tag-orange">进行中</span>',
+    paid: '<span class="tag tag-green">已结账</span>',
+    cancelled: '<span class="tag tag-gray">已作废</span>'
+  };
+  return map[status] || status;
+}
+
+async function viewOrder(orderId) {
+  try {
+    const items = await SUPA.list('restaurant_order_items', `order_id=eq.${orderId}`);
+    const order = (window._allOrders || []).find(o => o.id === orderId);
+    const html = `
+      <h3>📋 订单详情 - ${order?.order_no || ''}</h3>
+      <p style="margin-bottom:10px;color:#888;font-size:12px;">桌台：${order?.table_name || '-'} | 服务员：${order?.server_name || '-'}</p>
+      <table class="table">
+        <thead><tr><th>菜品</th><th>单价</th><th>数量</th><th>金额</th></tr></thead>
+        <tbody>
+          ${items.map(i => `
+            <tr><td>${i.dish_name}</td><td>¥${i.price.toFixed(2)}</td><td>${i.quantity}</td><td>¥${i.amount.toFixed(2)}</td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="text-align:right;margin-top:15px;font-size:18px;font-weight:bold;color:#d32f2f;">合计：¥${(order?.total || 0).toFixed(2)}</div>
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeModal()">关闭</button>
+      </div>
+    `;
+    showModalBox(html);
+  } catch (e) {
+    alert('加载失败：' + e.message);
+  }
+}
+
+async function payOrder(orderId) {
+  if (!confirm('确认此订单已结账？')) return;
+  try {
+    await SUPA.update('restaurant_orders', orderId, { status: 'paid', close_time: new Date().toISOString() });
+    // 释放桌台
+    const order = (window._allOrders || []).find(o => o.id === orderId);
+    if (order?.table_id) {
+      await SUPA.update('restaurant_tables', order.table_id, { status: 'free', current_order_id: null });
+    }
+    alert('✅ 结账成功！');
+    renderOrders();
+  } catch (e) {
+    alert('操作失败：' + e.message);
+  }
+}
+
+async function cancelOrder(orderId) {
+  if (!confirm('确定作废此订单？')) return;
+  try {
+    await SUPA.update('restaurant_orders', orderId, { status: 'cancelled', close_time: new Date().toISOString() });
+    // 释放桌台
+    const order = (window._allOrders || []).find(o => o.id === orderId);
+    if (order?.table_id) {
+      await SUPA.update('restaurant_tables', order.table_id, { status: 'free', current_order_id: null });
+    }
+    alert('已作废');
+    renderOrders();
+  } catch (e) {
+    alert('操作失败：' + e.message);
+  }
+}
+
+function showModalBox(html) {
+  const div = document.createElement('div');
+  div.id = 'gen-modal';
+  div.className = 'modal-mask';
+  div.onclick = function(e) { if (e.target === this) closeModal(); };
+  div.innerHTML = `<div class="modal">${html}</div>`;
+  document.body.appendChild(div);
+}
+
+function closeModal() {
+  const m = document.getElementById('gen-modal');
+  if (m) m.remove();
+}
+
+// ========== 会员管理 ==========
+async function renderMembers() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const members = await SUPA.list('restaurant_members', 'order=created_at.desc');
+    area.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💳 会员列表 (${members.length})</div>
+          <button class="btn btn-warn btn-small" onclick="showMemberModal()">+ 添加会员</button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" placeholder="搜索姓名/手机号" oninput="filterMembers(this.value)">
+        </div>
+        <table class="table" id="members-table">
+          <thead>
+            <tr>
+              <th>姓名</th>
+              <th>手机号</th>
+              <th>等级</th>
+              <th>余额</th>
+              <th>累计消费</th>
+              <th>积分</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${members.map(m => `
+              <tr>
+                <td><b>${m.name}</b></td>
+                <td>${m.phone}</td>
+                <td>${memberLevelTag(m.level)}</td>
+                <td style="color:#4caf50;font-weight:bold;">¥${(m.balance || 0).toFixed(2)}</td>
+                <td>¥${(m.total_consume || 0).toFixed(2)}</td>
+                <td>${m.points || 0}</td>
+                <td>${m.status === 'active' ? '<span class="tag tag-green">正常</span>' : '<span class="tag tag-gray">停用</span>'}</td>
+                <td>
+                  <button class="btn btn-warn btn-small" onclick="rechargeMember(${m.id})">充值</button>
+                  <button class="btn btn-outline btn-small" onclick="editMember(${m.id})">编辑</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allMembers = members;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
+}
+
+function memberLevelTag(level) {
+  const map = {
+    normal: '<span class="tag tag-gray">普通会员</span>',
+    silver: '<span class="tag tag-blue">银卡会员</span>',
+    gold: '<span class="tag tag-orange">金卡会员</span>',
+    diamond: '<span class="tag tag-purple">钻石会员</span>'
+  };
+  return map[level] || '<span class="tag tag-gray">普通会员</span>';
+}
+
+function showMemberModal(member = null) {
+  const m = member || { name: '', phone: '', level: 'normal', birthday: '', note: '' };
+  const html = `
+    <h3>${member ? '✏️ 编辑会员' : '➕ 添加会员'}</h3>
+    <div class="form-group"><label class="form-label">姓名 *</label><input class="form-input" id="m-name" value="${m.name}"></div>
+    <div class="form-group"><label class="form-label">手机号 *</label><input class="form-input" id="m-phone" value="${m.phone}"></div>
+    <div class="form-group"><label class="form-label">等级</label>
+      <select class="form-input" id="m-level">
+        <option value="normal" ${m.level === 'normal' ? 'selected' : ''}>普通会员</option>
+        <option value="silver" ${m.level === 'silver' ? 'selected' : ''}>银卡会员</option>
+        <option value="gold" ${m.level === 'gold' ? 'selected' : ''}>金卡会员</option>
+        <option value="diamond" ${m.level === 'diamond' ? 'selected' : ''}>钻石会员</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">生日</label><input class="form-input" id="m-birthday" value="${m.birthday || ''}" placeholder="如：08-15"></div>
+    <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="m-note" value="${m.note || ''}"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveMember(${member?.id || 'null'})">保存</button>
+    </div>
+  `;
+  showModalBox(html);
+}
+
+async function saveMember(id) {
+  const name = document.getElementById('m-name').value.trim();
+  const phone = document.getElementById('m-phone').value.trim();
+  if (!name || !phone) { alert('请填写姓名和手机号！'); return; }
+
+  const data = {
+    name, phone,
+    level: document.getElementById('m-level').value,
+    birthday: document.getElementById('m-birthday').value,
+    note: document.getElementById('m-note').value
+  };
+
+  try {
+    if (id) {
+      await SUPA.update('restaurant_members', id, data);
+    } else {
+      await SUPA.create('restaurant_members', data);
+    }
+    alert('✅ 保存成功！');
+    closeModal();
+    renderMembers();
+  } catch (e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+function editMember(id) {
+  const m = (window._allMembers || []).find(x => x.id === id);
+  showMemberModal(m);
+}
+
+function rechargeMember(id) {
+  const m = (window._allMembers || []).find(x => x.id === id);
+  const html = `
+    <h3>💰 会员充值</h3>
+    <p style="margin-bottom:15px;color:#666;">
+      <b>${m.name}</b>（${m.phone}）<br>
+      当前余额：<span style="color:#4caf50;font-weight:bold;font-size:18px;">¥${(m.balance || 0).toFixed(2)}</span>
+    </p>
+    <div class="recharge-box">
+      <div class="recharge-item">
+        <div class="recharge-label">充值金额</div>
+        <input class="recharge-input" type="number" id="r-amount" placeholder="请输入充值金额" value="100">
+      </div>
+      <div class="recharge-item">
+        <div class="recharge-label">赠送金额</div>
+        <input class="recharge-input" type="number" id="r-gift" placeholder="赠送金额" value="0">
+      </div>
+      <div class="recharge-item">
+        <div class="recharge-label">支付方式</div>
+        <select class="recharge-input" id="r-pay">
+          <option value="cash">现金</option>
+          <option value="wechat">微信</option>
+          <option value="alipay">支付宝</option>
+          <option value="card">刷卡</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-success" onclick="doRecharge(${m.id})">确认充值</button>
+    </div>
+  `;
+  showModalBox(html);
+}
+
+async function doRecharge(memberId) {
+  const amount = parseFloat(document.getElementById('r-amount').value);
+  const gift = parseFloat(document.getElementById('r-gift').value) || 0;
+  const payMethod = document.getElementById('r-pay').value;
+  if (!amount || amount <= 0) { alert('请输入充值金额！'); return; }
+
+  const member = (window._allMembers || []).find(m => m.id === memberId);
+  const newBalance = (member.balance || 0) + amount + gift;
+
+  try {
+    await SUPA.update('restaurant_members', memberId, { balance: newBalance });
+    await SUPA.create('restaurant_member_recharges', {
+      member_id: memberId,
+      member_name: member.name,
+      amount,
+      gift_amount: gift,
+      pay_method: payMethod,
+      operator_id: currentUser.id,
+      operator_name: currentUser.name || currentUser.username
+    });
+    alert(`✅ 充值成功！\n\n充值：¥${amount.toFixed(2)}\n赠送：¥${gift.toFixed(2)}\n新余额：¥${newBalance.toFixed(2)}`);
+    closeModal();
+    renderMembers();
+  } catch (e) {
+    alert('充值失败：' + e.message);
+  }
+}
+
+// ========== 菜品管理 ==========
+async function renderDishes() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const dishes = await SUPA.list('restaurant_dishes', 'order=category.asc,sort.asc');
+    const categories = [...new Set(dishes.map(d => d.category))];
+    area.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🍖 菜品管理 (${dishes.length})</div>
+          <button class="btn btn-warn btn-small" onclick="showDishModal()">+ 添加菜品</button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" placeholder="搜索菜名" oninput="filterDishes(this.value)">
+          <select class="search-select" onchange="filterDishCategory(this.value)">
+            <option value="">全部分类</option>
+            ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+          </select>
+        </div>
+        <table class="table" id="dishes-table">
+          <thead>
+            <tr>
+              <th>名称</th>
+              <th>分类</th>
+              <th>价格</th>
+              <th>单位</th>
+              <th>热销</th>
+              <th>推荐</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${dishes.map(d => `
+              <tr>
+                <td><b>${d.name}</b></td>
+                <td><span class="tag tag-blue">${d.category}</span></td>
+                <td style="color:#f44336;font-weight:bold;">¥${d.price.toFixed(2)}</td>
+                <td>${d.unit}</td>
+                <td>${d.is_hot ? '🔥 是' : '否'}</td>
+                <td>${d.is_recommend ? '⭐ 是' : '否'}</td>
+                <td>${d.status === 'on' ? '<span class="tag tag-green">上架</span>' : '<span class="tag tag-gray">下架</span>'}</td>
+                <td>
+                  <button class="btn btn-outline btn-small" onclick="editDish(${d.id})">编辑</button>
+                  <button class="btn btn-danger btn-small" onclick="deleteDish(${d.id})">删除</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allDishes = dishes;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
+}
+
+function showDishModal(dish = null) {
+  const d = dish || { name: '', category: '烧烤', price: '', unit: '份', is_hot: false, is_recommend: false, status: 'on', sort: 0 };
+  const html = `
+    <h3>${dish ? '✏️ 编辑菜品' : '➕ 添加菜品'}</h3>
+    <div class="form-group"><label class="form-label">菜名 *</label><input class="form-input" id="d-name" value="${d.name}"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">分类</label>
+        <select class="form-input" id="d-cat">
+          ${['烧烤','热菜','凉菜','主食','酒水','饮料','小吃'].map(c => `<option ${d.category===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">单位</label>
+        <select class="form-input" id="d-unit">
+          ${['份','串','个','瓶','杯','盘','斤'].map(u => `<option ${d.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">价格 *</label><input class="form-input" type="number" id="d-price" value="${d.price}"></div>
+      <div class="form-group"><label class="form-label">排序</label><input class="form-input" type="number" id="d-sort" value="${d.sort}"></div>
+    </div>
+    <div style="display:flex;gap:20px;margin-bottom:15px;">
+      <label><input type="checkbox" id="d-hot" ${d.is_hot ? 'checked' : ''}> 🔥 热销</label>
+      <label><input type="checkbox" id="d-rec" ${d.is_recommend ? 'checked' : ''}> ⭐ 推荐</label>
+      <label><input type="checkbox" id="d-status" ${d.status === 'on' ? 'checked' : ''}> 上架中</label>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveDish(${dish?.id || 'null'})">保存</button>
+    </div>
+  `;
+  showModalBox(html);
+}
+
+async function saveDish(id) {
+  const name = document.getElementById('d-name').value.trim();
+  const price = parseFloat(document.getElementById('d-price').value);
+  if (!name || !price) { alert('请填写菜名和价格！'); return; }
+
+  const data = {
+    name,
+    category: document.getElementById('d-cat').value,
+    unit: document.getElementById('d-unit').value,
+    price,
+    sort: parseInt(document.getElementById('d-sort').value) || 0,
+    is_hot: document.getElementById('d-hot').checked,
+    is_recommend: document.getElementById('d-rec').checked,
+    status: document.getElementById('d-status').checked ? 'on' : 'off'
+  };
+
+  try {
+    if (id) await SUPA.update('restaurant_dishes', id, data);
+    else await SUPA.create('restaurant_dishes', data);
+    alert('✅ 保存成功！');
+    closeModal();
+    renderDishes();
+  } catch (e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+function editDish(id) {
+  const d = (window._allDishes || []).find(x => x.id === id);
+  showDishModal(d);
+}
+
+async function deleteDish(id) {
+  if (!confirm('确定删除此菜品？')) return;
+  try {
+    await SUPA.remove('restaurant_dishes', id);
+    renderDishes();
+  } catch (e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+// ========== 桌台设置 ==========
+async function renderTableSettings() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const tables = await SUPA.list('restaurant_tables', 'order=type.asc,sort.asc');
+    area.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🪑 桌台管理 (${tables.length})</div>
+          <button class="btn btn-warn btn-small" onclick="showTableModal()">+ 添加桌台</button>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>名称</th>
+              <th>类型</th>
+              <th>容纳人数</th>
+              <th>小时费率</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tables.map(t => `
+              <tr>
+                <td><b>${t.name}</b></td>
+                <td>${t.type === 'ktv' ? '<span class="tag tag-purple">KTV包厢</span>' : '<span class="tag tag-blue">大厅桌台</span>'}</td>
+                <td>${t.capacity} 人</td>
+                <td>${t.hourly_rate ? '¥' + t.hourly_rate + '/小时' : '-'}</td>
+                <td>${t.status === 'free' ? '<span class="tag tag-green">空闲</span>' : '<span class="tag tag-red">使用中</span>'}</td>
+                <td>
+                  <button class="btn btn-outline btn-small" onclick="editTable(${t.id})">编辑</button>
+                  <button class="btn btn-danger btn-small" onclick="deleteTable(${t.id})">删除</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allTables = tables;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
+}
+
+function showTableModal(table = null) {
+  const t = table || { name: '', type: 'hall', capacity: 4, hourly_rate: 0, sort: 0, note: '' };
+  const html = `
+    <h3>${table ? '✏️ 编辑桌台' : '➕ 添加桌台'}</h3>
+    <div class="form-group"><label class="form-label">名称 *</label><input class="form-input" id="t-name" value="${t.name}" placeholder="如：1号桌、KTV小包"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">类型</label>
+        <select class="form-input" id="t-type">
+          <option value="hall" ${t.type === 'hall' ? 'selected' : ''}>大厅桌台</option>
+          <option value="ktv" ${t.type === 'ktv' ? 'selected' : ''}>KTV包厢</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">容纳人数</label><input class="form-input" type="number" id="t-cap" value="${t.capacity}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">小时费率（KTV）</label><input class="form-input" type="number" id="t-rate" value="${t.hourly_rate || 0}"></div>
+      <div class="form-group"><label class="form-label">排序</label><input class="form-input" type="number" id="t-sort" value="${t.sort}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="t-note" value="${t.note || ''}"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveTable(${table?.id || 'null'})">保存</button>
+    </div>
+  `;
+  showModalBox(html);
+}
+
+async function saveTable(id) {
+  const name = document.getElementById('t-name').value.trim();
+  if (!name) { alert('请填写名称！'); return; }
+
+  const data = {
+    name,
+    type: document.getElementById('t-type').value,
+    capacity: parseInt(document.getElementById('t-cap').value) || 4,
+    hourly_rate: parseFloat(document.getElementById('t-rate').value) || 0,
+    sort: parseInt(document.getElementById('t-sort').value) || 0,
+    note: document.getElementById('t-note').value
+  };
+
+  try {
+    if (id) await SUPA.update('restaurant_tables', id, data);
+    else await SUPA.create('restaurant_tables', data);
+    alert('✅ 保存成功！');
+    closeModal();
+    renderTableSettings();
+  } catch (e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+function editTable(id) {
+  const t = (window._allTables || []).find(x => x.id === id);
+  showTableModal(t);
+}
+
+async function deleteTable(id) {
+  if (!confirm('确定删除此桌台？')) return;
+  try {
+    await SUPA.remove('restaurant_tables', id);
+    renderTableSettings();
+  } catch (e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+// ========== 数据统计 ==========
+async function renderStats() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const [allOrders, allMembers, allDishes] = await Promise.all([
+      SUPA.list('restaurant_orders', 'order=created_at.desc&limit=1000'),
+      SUPA.list('restaurant_members', 'select=id'),
+      SUPA.list('restaurant_dishes', 'status=eq.on&select=id')
+    ]);
+
+    const paidOrders = allOrders.filter(o => o.status === 'paid');
+    const todayOrders = paidOrders.filter(o => (o.created_at || '').startsWith(today));
+    const todayTotal = todayOrders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+    const todayPeople = todayOrders.reduce((s, o) => s + (o.people_count || 0), 0);
+    const totalRevenue = paidOrders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+
+    // 热销菜品
+    const items = await SUPA.list('restaurant_order_items', 'order=amount.desc&limit=50');
+    const dishSales = {};
+    items.forEach(i => {
+      if (!dishSales[i.dish_name]) dishSales[i.dish_name] = { qty: 0, amount: 0 };
+      dishSales[i.dish_name].qty += i.quantity;
+      dishSales[i.dish_name].amount += parseFloat(i.amount);
+    });
+    const topDishes = Object.entries(dishSales)
+      .sort((a, b) => b[1].amount - a[1].amount)
+      .slice(0, 5);
+
+    area.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">今日营业额</div>
+          <div class="stat-value">¥${todayTotal.toFixed(2)}<span class="stat-unit"></span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-label">今日订单</div>
+          <div class="stat-value">${todayOrders.length}<span class="stat-unit">单</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-label">今日客流</div>
+          <div class="stat-value">${todayPeople}<span class="stat-unit">人</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💳</div>
+          <div class="stat-label">会员总数</div>
+          <div class="stat-value">${allMembers.length}<span class="stat-unit">人</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:15px;">📊 总览数据</div>
+          <table class="table">
+            <tbody>
+              <tr><td>累计营业额</td><td style="color:#d32f2f;font-weight:bold;">¥${totalRevenue.toFixed(2)}</td></tr>
+              <tr><td>累计订单</td><td>${paidOrders.length} 单</td></tr>
+              <tr><td>菜品种类</td><td>${allDishes.length} 道</td></tr>
+              <tr><td>进行中订单</td><td><span class="tag tag-orange">${allOrders.filter(o => o.status === 'open').length} 单</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:15px;">🏆 热销菜品 TOP5</div>
+          <table class="table">
+            <thead><tr><th>排名</th><th>菜品</th><th>销量</th><th>销售额</th></tr></thead>
+            <tbody>
+              ${topDishes.map(([name, d], i) => `
+                <tr>
+                  <td><b style="color:${i < 3 ? '#ff6b35' : '#888'};">${'🥇🥈🥉'.split('')[i] || ('# ' + (i + 1))}</b></td>
+                  <td>${name}</td>
+                  <td>${d.qty} 份</td>
+                  <td style="color:#f44336;">¥${d.amount.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
     `;
-  }).join('');
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
 }
 
-// ========== 8. 系统设置 ==========
-function renderSettings() {
-  const s = DB.get('settings', {});
-  document.getElementById('set-shop-name').value = s.shop_name || '';
-  document.getElementById('set-shop-phone').value = s.shop_phone || '';
-  document.getElementById('set-shop-address').value = s.shop_address || '';
-  document.getElementById('set-ktv-fee').value = s.ktv_hourly_fee || 50;
-  document.getElementById('set-discount').value = s.staff_discount || 0.85;
+// ========== 库存进货 ==========
+async function renderStock() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
 
-  const users = DB.get('users', []);
-  document.getElementById('staff-list').innerHTML = users.map(u => `
-    <div class="list-item">
-      <div class="list-left">
-        <div class="list-title">${u.real_name || u.username}</div>
-        <div class="list-sub">账号：${u.username} · ${u.role === 'admin' ? '管理员' : '员工'}</div>
+  try {
+    const records = await SUPA.list('restaurant_stock', 'order=created_at.desc');
+    area.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📦 进货记录 (${records.length})</div>
+          <button class="btn btn-warn btn-small" onclick="showStockModal()">+ 新增进货</button>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>物品名称</th>
+              <th>分类</th>
+              <th>数量</th>
+              <th>单价</th>
+              <th>总价</th>
+              <th>供应商</th>
+              <th>操作人</th>
+              <th>时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${records.map(r => `
+              <tr>
+                <td><b>${r.item_name}</b></td>
+                <td><span class="tag tag-blue">${r.category || '-'}</span></td>
+                <td>${r.quantity} ${r.unit}</td>
+                <td>¥${(r.unit_price || 0).toFixed(2)}</td>
+                <td style="color:#f44336;font-weight:bold;">¥${(r.total_price || 0).toFixed(2)}</td>
+                <td>${r.supplier || '-'}</td>
+                <td>${r.operator_name || '-'}</td>
+                <td style="font-size:12px;color:#888;">${new Date(r.created_at).toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
       </div>
-      <button class="btn btn-danger" style="padding:6px 10px; font-size:12px;" onclick="delStaff(${u.id})" ${u.username === 'admin' ? 'disabled style="opacity:0.5"' : ''}>删除</button>
-    </div>
-  `).join('');
+    `;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
 }
 
-function saveSettings() {
-  const s = {
-    shop_name: document.getElementById('set-shop-name').value,
-    shop_phone: document.getElementById('set-shop-phone').value,
-    shop_address: document.getElementById('set-shop-address').value,
-    ktv_hourly_fee: parseFloat(document.getElementById('set-ktv-fee').value) || 50,
-    staff_discount: parseFloat(document.getElementById('set-discount').value) || 1
-  };
-  DB.set('settings', s);
-  alert('设置已保存');
-}
-
-function showStaffModal() {
+function showStockModal() {
   const html = `
-    <div class="modal-mask" onclick="if(event.target===this)document.getElementById('staff-modal').innerHTML=''">
-      <div class="modal">
-        <div class="modal-title">新增员工账号</div>
-        <div class="form-group">
-          <label>账号</label>
-          <input id="staff-username" placeholder="登录账号">
-        </div>
-        <div class="form-group">
-          <label>姓名</label>
-          <input id="staff-name" placeholder="员工姓名">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>密码</label>
-            <input id="staff-password" type="password" placeholder="登录密码" value="123456">
-          </div>
-          <div class="form-group">
-            <label>角色</label>
-            <select id="staff-role">
-              <option value="staff">员工</option>
-              <option value="admin">管理员</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-          <button class="btn btn-gray" style="flex:1;" onclick="document.getElementById('staff-modal').innerHTML=''">取消</button>
-          <button class="btn btn-primary" style="flex:1;" onclick="saveStaff()">保存</button>
-        </div>
+    <h3>📦 新增进货</h3>
+    <div class="form-group"><label class="form-label">物品名称 *</label><input class="form-input" id="s-name" placeholder="如：羊肉、啤酒、蔬菜"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">分类</label>
+        <select class="form-input" id="s-cat">
+          ${['肉类','蔬菜','酒水','调料','餐具','其他'].map(c => `<option>${c}</option>`).join('')}
+        </select>
       </div>
+      <div class="form-group"><label class="form-label">单位</label>
+        <select class="form-input" id="s-unit">
+          ${['斤','件','箱','瓶','袋','个','公斤'].map(u => `<option>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">数量 *</label><input class="form-input" type="number" id="s-qty"></div>
+      <div class="form-group"><label class="form-label">单价</label><input class="form-input" type="number" id="s-price"></div>
+    </div>
+    <div class="form-group"><label class="form-label">供应商</label><input class="form-input" id="s-supplier"></div>
+    <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="s-note"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveStock()">保存</button>
     </div>
   `;
-  if (!document.getElementById('staff-modal')) {
-    const div = document.createElement('div');
-    div.id = 'staff-modal';
-    document.body.appendChild(div);
+  showModalBox(html);
+}
+
+async function saveStock() {
+  const name = document.getElementById('s-name').value.trim();
+  const qty = parseFloat(document.getElementById('s-qty').value);
+  if (!name || !qty) { alert('请填写名称和数量！'); return; }
+
+  const unitPrice = parseFloat(document.getElementById('s-price').value) || 0;
+  const totalPrice = qty * unitPrice;
+
+  try {
+    await SUPA.create('restaurant_stock', {
+      item_name: name,
+      category: document.getElementById('s-cat').value,
+      quantity: qty,
+      unit: document.getElementById('s-unit').value,
+      unit_price: unitPrice,
+      total_price: totalPrice,
+      supplier: document.getElementById('s-supplier').value,
+      operator_id: currentUser.id,
+      operator_name: currentUser.name || currentUser.username,
+      note: document.getElementById('s-note').value
+    });
+    alert('✅ 保存成功！');
+    closeModal();
+    renderStock();
+  } catch (e) {
+    alert('保存失败：' + e.message);
   }
-  document.getElementById('staff-modal').innerHTML = html;
 }
 
-function saveStaff() {
-  const username = document.getElementById('staff-username').value.trim();
-  const real_name = document.getElementById('staff-name').value.trim();
-  const password = document.getElementById('staff-password').value;
-  const role = document.getElementById('staff-role').value;
+// ========== 系统设置 ==========
+async function renderSettings() {
+  const area = document.getElementById('content-area');
 
-  if (!username || !password) { alert('请填写账号和密码'); return; }
+  try {
+    const users = await SUPA.list('restaurant_users', 'order=id.asc');
+    area.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏪 店铺信息</div>
+        </div>
+        <table class="table">
+          <tbody>
+            <tr><td style="width:120px;">店铺名称</td><td>金烽音乐餐吧</td></tr>
+            <tr><td>订餐电话</td><td>181-6169-7774</td></tr>
+            <tr><td>营业时间</td><td>下午 17:00 - 凌晨 02:00</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-  const users = DB.get('users', []);
-  if (users.find(u => u.username === username)) { alert('账号已存在'); return; }
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👥 员工账号 (${users.length})</div>
+          <button class="btn btn-warn btn-small" onclick="showUserModal()">+ 添加员工</button>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>账号</th>
+              <th>姓名</th>
+              <th>角色</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(u => `
+              <tr>
+                <td><b>${u.username}</b></td>
+                <td>${u.name || '-'}</td>
+                <td>${u.role === 'admin' ? '<span class="tag tag-orange">管理员</span>' : '<span class="tag tag-blue">员工</span>'}</td>
+                <td>${u.status === 'active' ? '<span class="tag tag-green">正常</span>' : '<span class="tag tag-gray">停用</span>'}</td>
+                <td>
+                  <button class="btn btn-outline btn-small" onclick="editUser(${u.id})">编辑</button>
+                  <button class="btn btn-outline btn-small" onclick="resetPwd(${u.id})">重置密码</button>
+                  ${u.username !== 'admin' ? `<button class="btn btn-danger btn-small" onclick="deleteUser(${u.id})">删除</button>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
 
-  users.push({ id: DB.nextId(users), username, password, real_name, role });
-  DB.set('users', users);
-  document.getElementById('staff-modal').innerHTML = '';
-  renderSettings();
-  alert('添加成功');
+      <div class="card">
+        <div class="card-header"><div class="card-title">ℹ️ 系统信息</div></div>
+        <table class="table">
+          <tbody>
+            <tr><td style="width:120px;">系统版本</td><td>金烽音乐餐吧管理系统 v1.0</td></tr>
+            <tr><td>数据存储</td><td>Supabase 云端数据库</td></tr>
+            <tr><td>当前登录</td><td>${currentUser.name || currentUser.username}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allUsers = users;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
 }
 
-function delStaff(id) {
+function showUserModal(user = null) {
+  const u = user || { username: '', name: '', role: 'staff', status: 'active' };
+  const html = `
+    <h3>${user ? '✏️ 编辑员工' : '➕ 添加员工'}</h3>
+    <div class="form-group"><label class="form-label">登录账号 *</label><input class="form-input" id="u-username" value="${u.username}"></div>
+    <div class="form-group"><label class="form-label">姓名</label><input class="form-input" id="u-name" value="${u.name || ''}"></div>
+    ${!user ? '<div class="form-group"><label class="form-label">初始密码 *</label><input class="form-input" id="u-pwd" value="123456"></div>' : ''}
+    <div class="form-group"><label class="form-label">角色</label>
+      <select class="form-input" id="u-role">
+        <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>员工</option>
+        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>管理员</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">状态</label>
+      <select class="form-input" id="u-status">
+        <option value="active" ${u.status === 'active' ? 'selected' : ''}>正常</option>
+        <option value="disabled" ${u.status === 'disabled' ? 'selected' : ''}>停用</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveUser(${user?.id || 'null'})">保存</button>
+    </div>
+  `;
+  showModalBox(html);
+}
+
+async function saveUser(id) {
+  const username = document.getElementById('u-username').value.trim();
+  if (!username) { alert('请填写账号！'); return; }
+
+  const data = {
+    username,
+    name: document.getElementById('u-name').value,
+    role: document.getElementById('u-role').value,
+    status: document.getElementById('u-status').value
+  };
+
+  const pwdEl = document.getElementById('u-pwd');
+  if (pwdEl) data.password = pwdEl.value;
+
+  try {
+    if (id) await SUPA.update('restaurant_users', id, data);
+    else await SUPA.create('restaurant_users', data);
+    alert('✅ 保存成功！');
+    closeModal();
+    renderSettings();
+  } catch (e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+function editUser(id) {
+  const u = (window._allUsers || []).find(x => x.id === id);
+  showUserModal(u);
+}
+
+async function resetPwd(id) {
+  if (!confirm('确定重置密码为 123456？')) return;
+  try {
+    await SUPA.update('restaurant_users', id, { password: '123456' });
+    alert('✅ 密码已重置为 123456');
+  } catch (e) {
+    alert('操作失败：' + e.message);
+  }
+}
+
+async function deleteUser(id) {
   if (!confirm('确定删除此账号？')) return;
-  const users = DB.get('users', []).filter(u => u.id !== id);
-  DB.set('users', users);
-  renderSettings();
+  try {
+    await SUPA.remove('restaurant_users', id);
+    renderSettings();
+  } catch (e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+// ========== 搜索过滤 ==========
+function filterMembers(keyword) {
+  const rows = document.querySelectorAll('#members-table tbody tr');
+  keyword = keyword.toLowerCase();
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none';
+  });
+}
+
+function filterDishes(keyword) {
+  const rows = document.querySelectorAll('#dishes-table tbody tr');
+  keyword = keyword.toLowerCase();
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none';
+  });
+}
+
+function filterDishCategory(cat) {
+  const rows = document.querySelectorAll('#dishes-table tbody tr');
+  rows.forEach(r => {
+    r.style.display = !cat || r.cells[1].textContent.includes(cat) ? '' : 'none';
+  });
+}
+
+function filterOrders(keyword) {
+  const rows = document.querySelectorAll('#orders-table tbody tr');
+  keyword = keyword.toLowerCase();
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none';
+  });
+}
+
+function filterOrderStatus(status) {
+  const rows = document.querySelectorAll('#orders-table tbody tr');
+  rows.forEach(r => {
+    r.style.display = !status || r.cells[5].textContent.includes(statusText(status)) ? '' : 'none';
+  });
+}
+
+function statusText(s) {
+  const map = { open: '进行中', paid: '已结账', cancelled: '已作废' };
+  return map[s] || s;
 }
 
 // ========== 启动 ==========
-initData();
-
-// 检查登录状态
-const savedUser = DB.get('current_user', null);
-if (savedUser) {
-  currentUser = savedUser;
-  showApp();
+if (currentUser) {
+  renderApp();
 } else {
-  document.getElementById('login-page').style.display = 'flex';
+  renderLogin();
 }
-
-// KTV页面每秒刷新
-setInterval(() => {
-  if (currentPage === 'ktv') renderKtv();
-}, 1000 * 60); // 每分钟刷新
 </script>
 </body>
 </html>
