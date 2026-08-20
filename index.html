@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>金烽音乐餐厅 - 烧烤 · KTV · 音乐 · 美酒</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #1a0a0a; color: #fff; }
+
+  /* 顶部Banner */
+  .banner {
+    background: linear-gradient(135deg, #ff6b35 0%, #f72c25 40%, #9d0208 100%);
+    padding: 50px 20px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .banner::before {
+    content: '';
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,200,100,0.3) 0%, transparent 60%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  .banner-content { position: relative; z-index: 2; }
+  .logo-text {
+    font-size: 42px; font-weight: bold; margin-bottom: 10px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    background: linear-gradient(to bottom, #fff7e6, #ffd93d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .slogan { font-size: 16px; color: #ffe0b2; margin-bottom: 8px; letter-spacing: 3px; }
+  .subtitle { font-size: 14px; color: #ffcc80; opacity: 0.9; }
+
+  /* 功能标签 */
+  .tags {
+    display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap;
+  }
+  .tag {
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px; border-radius: 20px;
+    font-size: 13px; display: flex; align-items: center; gap: 5px;
+  }
+
+  /* 预约按钮 */
+  .book-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffd93d, #ff9500);
+    color: #5d2e0c; font-weight: bold;
+    padding: 14px 50px; border-radius: 30px;
+    font-size: 16px; text-decoration: none;
+    margin-top: 25px;
+    box-shadow: 0 4px 20px rgba(255, 150, 50, 0.5);
+    animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  /* 板块标题 */
+  .section { padding: 30px 20px; }
+  .section-title {
+    font-size: 22px; font-weight: bold; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::before {
+    content: ''; width: 4px; height: 22px; background: #ff6b35; border-radius: 2px;
+  }
+
+  /* 特色卡片 */
+  .feature-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  }
+  .feature-card {
+    background: linear-gradient(135deg, #2d1810, #1a0f0f);
+    border-radius: 12px; padding: 20px 15px; text-align: center;
+    border: 1px solid rgba(255, 107, 53, 0.2);
+  }
+  .feature-icon { font-size: 36px; margin-bottom: 8px; }
+  .feature-name { font-size: 15px; font-weight: bold; margin-bottom: 4px; }
+  .feature-desc { font-size: 12px; color: #aaa; line-height: 1.4; }
+
+  /* 推荐菜品 */
+  .dish-scroll {
+    display: flex; overflow-x: auto; gap: 12px; padding-bottom: 5px;
+    scrollbar-width: none;
+  }
+  .dish-scroll::-webkit-scrollbar { display: none; }
+  .dish-card {
+    flex-shrink: 0; width: 140px;
+    background: #2d1810; border-radius: 12px; overflow: hidden;
+    border: 1px solid rgba(255, 107, 53, 0.2);
+  }
+  .dish-img {
+    width: 100%; aspect-ratio: 1; background: linear-gradient(135deg, #ff6b35, #9d0208);
+    display: flex; align-items: center; justify-content: center; font-size: 50px;
+  }
+  .dish-info { padding: 10px; }
+  .dish-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+  .dish-price { color: #ff6b35; font-weight: bold; font-size: 16px; }
+  .dish-price small { font-size: 11px; font-weight: normal; color: #999; }
+  .hot-badge {
+    display: inline-block; background: #ff3d00; color: #fff;
+    font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 5px; vertical-align: middle;
+  }
+
+  /* KTV包厢 */
+  .ktv-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .ktv-card {
+    background: linear-gradient(135deg, #3d1a5e, #1a0f2e);
+    border-radius: 10px; padding: 15px 10px; text-align: center;
+    border: 1px solid rgba(156, 39, 176, 0.3);
+  }
+  .ktv-icon { font-size: 28px; margin-bottom: 5px; }
+  .ktv-name { font-size: 13px; font-weight: bold; margin-bottom: 3px; }
+  .ktv-price { font-size: 11px; color: #ce93d8; }
+
+  /* 酒水展示 */
+  .drink-section {
+    background: linear-gradient(135deg, #1a237e, #0d1333);
+    margin: 20px; border-radius: 15px; padding: 25px 20px;
+  }
+  .drink-title {
+    font-size: 20px; font-weight: bold; margin-bottom: 15px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .drink-list {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  }
+  .drink-item { text-align: center; }
+  .drink-icon { font-size: 32px; margin-bottom: 5px; }
+  .drink-name { font-size: 11px; color: #bbdefb; }
+  .drink-price { font-size: 12px; color: #64b5f6; font-weight: bold; margin-top: 3px; }
+
+  /* 联系信息 */
+  .contact-section {
+    background: #2d1810; border-radius: 15px; padding: 25px 20px;
+    margin: 20px; border: 1px solid rgba(255, 107, 53, 0.2);
+  }
+  .contact-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 107, 53, 0.1);
+  }
+  .contact-item:last-child { border-bottom: none; }
+  .contact-icon { font-size: 22px; width: 30px; text-align: center; }
+  .contact-text { flex: 1; }
+  .contact-label { font-size: 12px; color: #999; margin-bottom: 3px; }
+  .contact-value { font-size: 15px; font-weight: bold; color: #ffcc80; }
+
+  /* 底部 */
+  .footer {
+    text-align: center; padding: 30px 20px 50px;
+    color: #666; font-size: 12px;
+  }
+  .footer-logo {
+    font-size: 18px; font-weight: bold; margin-bottom: 8px;
+    color: #ff6b35;
+  }
+
+  /* 导航栏 */
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(20, 10, 10, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 107, 53, 0.2);
+    display: flex; justify-content: space-around; padding: 8px 0;
+    z-index: 100;
+  }
+  .nav-item {
+    text-align: center; font-size: 11px; color: #888; text-decoration: none;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1;
+  }
+  .nav-icon { font-size: 22px; }
+  .nav-item:active { color: #ff6b35; }
+
+  /* 弹出层 */
+  .modal-mask {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: #1f1010; border-radius: 15px; padding: 25px;
+    width: 90%; max-width: 360px;
+    border: 1px solid rgba(255, 107, 53, 0.3);
+  }
+  .modal h3 { color: #ffcc80; margin-bottom: 15px; text-align: center; }
+  .form-group { margin-bottom: 12px; }
+  .form-group label { display: block; font-size: 13px; color: #ccc; margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 10px 12px; border: 1px solid #444;
+    border-radius: 8px; background: #1a0a0a; color: #fff; font-size: 14px;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: #ff6b35; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+  .btn {
+    flex: 1; padding: 12px; border: none; border-radius: 8px;
+    font-size: 15px; cursor: pointer;
+  }
+  .btn-cancel { background: #333; color: #ccc; }
+  .btn-primary {
+    background: linear-gradient(135deg, #ff6b35, #f72c25);
+    color: #fff; font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<!-- Banner -->
+<div class="banner">
+  <div class="banner-content">
+    <div class="slogan">🎵 · 🍢 · 🎤 · 🍻</div>
+    <div class="logo-text">金烽音乐餐厅</div>
+    <div class="subtitle">烧烤美味 · KTV欢唱 · 激情畅饮</div>
+    <div class="tags">
+      <div class="tag">🍢 烧烤一绝</div>
+      <div class="tag">🎤 KTV包厢</div>
+      <div class="tag">🍻 百款酒水</div>
+      <div class="tag">🎵 现场音乐</div>
+    </div>
+    <a class="book-btn" href="javascript:showBookModal();">📞 立即预订</a>
+  </div>
+</div>
+
+<!-- 特色服务 -->
+<div class="section">
+  <div class="section-title">✨ 四大特色</div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🍢</div>
+      <div class="feature-name">特色烧烤</div>
+      <div class="feature-desc">秘制酱料<br>现串现烤</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎤</div>
+      <div class="feature-name">KTV包厢</div>
+      <div class="feature-desc">专业音响<br>大中小包</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🍻</div>
+      <div class="feature-name">百款酒水</div>
+      <div class="feature-desc">啤酒洋酒<br>红白葡萄酒</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎵</div>
+      <div class="feature-name">现场演唱</div>
+      <div class="feature-desc">每晚驻唱<br>音乐盛宴</div>
+    </div>
+  </div>
+</div>
+
+<!-- 招牌烧烤 -->
+<div class="section" style="padding-top: 0;">
+  <div class="section-title">🔥 招牌烧烤</div>
+  <div class="dish-scroll">
+    <div class="dish-card">
+      <div class="dish-img">🍖</div>
+      <div class="dish-info">
+        <div class="dish-name">羊肉串<span class="hot-badge">热卖</span></div>
+        <div class="dish-price">¥3 <small>/串</small></div>
+      </div>
+    </div>
+    <div class="dish-card">
+      <div class="dish-img">🥩</div>
+      <div class="dish-info">
+        <div class="dish-name">牛肉串<span class="hot-badge">推荐</span></div>
+        <div class="dish-price">¥4 <small>/串</small></div>
+      </div>
+    </div>
+    <div class="dish-card">
+      <div class="dish-img">🍗</div>
+      <div class="dish-info">
+        <div class="dish-name">烤鸡翅</div>
+        <div class="dish-price">¥8 <small>/个</small></div>
+      </div>
+    </div>
+    <div class="dish-card">
+      <div class="dish-img">🦪</div>
+      <div class="dish-info">
+        <div class="dish-name">烤生蚝<span class="hot-badge">招牌</span></div>
+        <div class="dish-price">¥10 <small>/个</small></div>
+      </div>
+    </div>
+    <div class="dish-card">
+      <div class="dish-img">🐟</div>
+      <div class="dish-info">
+        <div class="dish-name">特色烤鱼</div>
+        <div class="dish-price">¥68 <small>/条</small></div>
+      </div>
+    </div>
+    <div class="dish-card">
+      <div class="dish-img">🥘</div>
+      <div class="dish-info">
+        <div class="dish-name">麻辣小龙虾</div>
+        <div class="dish-price">¥88 <small>/份</small></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KTV包厢 -->
+<div class="section" style="padding-top: 0;">
+  <div class="section-title">🎤 KTV包厢</div>
+  <div class="ktv-grid">
+    <div class="ktv-card">
+      <div class="ktv-icon">🎵</div>
+      <div class="ktv-name">小包</div>
+      <div class="ktv-price">6-8人 / 58元/时</div>
+    </div>
+    <div class="ktv-card">
+      <div class="ktv-icon">🎶</div>
+      <div class="ktv-name">中包</div>
+      <div class="ktv-price">10-15人 / 88元/时</div>
+    </div>
+    <div class="ktv-card">
+      <div class="ktv-icon">🌟</div>
+      <div class="ktv-name">大包VIP</div>
+      <div class="ktv-price">20+人 / 168元/时</div>
+    </div>
+  </div>
+  <div style="font-size: 12px; color: #ce93d8; margin-top: 12px; text-align: center; line-height: 1.6;">
+    💜 专业级K歌音响系统 · 海量曲库更新<br>
+    💜 订包厢即送精美果盘一份
+  </div>
+</div>
+
+<!-- 酒水 -->
+<div class="drink-section">
+  <div class="drink-title">🍻 酒水专区</div>
+  <div class="drink-list">
+    <div class="drink-item">
+      <div class="drink-icon">🍺</div>
+      <div class="drink-name">青岛啤酒</div>
+      <div class="drink-price">¥8</div>
+    </div>
+    <div class="drink-item">
+      <div class="drink-icon">🍺</div>
+      <div class="drink-name">百威啤酒</div>
+      <div class="drink-price">¥12</div>
+    </div>
+    <div class="drink-item">
+      <div class="drink-icon">🍾</div>
+      <div class="drink-name">科罗娜</div>
+      <div class="drink-price">¥18</div>
+    </div>
+    <div class="drink-item">
+      <div class="drink-icon">🥂</div>
+      <div class="drink-name">1664白啤</div>
+      <div class="drink-price">¥20</div>
+    </div>
+    <div class="drink-item">
+      <div class="drink-icon">🍶</div>
+      <div class="drink-name">劲酒</div>
+      <div class="drink-price">¥35</div>
+    </div>
+    <div class="drink-item">
+      <div class="drink-icon">🍷</div>
+      <div class="drink-name">长城干红</div>
+      <div class="drink-price">¥88</div>
+    </div>
+    <div class="drink-item">
+      <div class="drink-icon">🥤</div>
+      <div class="drink-name">可乐/雪碧</div>
+      <div class="drink-price">¥6</div>
+    </div>
+    <div class="drink-item">
+      <div class="drink-icon">🧃</div>
+      <div class="drink-name">椰汁</div>
+      <div class="drink-price">¥10</div>
+    </div>
+  </div>
+  <div style="font-size: 12px; color: #64b5f6; margin-top: 15px; text-align: center;">
+    更多酒水请到店选购 · 会员享8.8折优惠
+  </div>
+</div>
+
+<!-- 联系我们 -->
+<div class="contact-section">
+  <div class="section-title" style="margin-bottom: 5px;">📞 联系我们</div>
+  <div class="contact-item">
+    <div class="contact-icon">📱</div>
+    <div class="contact-text">
+      <div class="contact-label">订餐电话</div>
+      <div class="contact-value">138-xxxx-xxxx</div>
+    </div>
+  </div>
+  <div class="contact-item">
+    <div class="contact-icon">📍</div>
+    <div class="contact-text">
+      <div class="contact-label">餐厅地址</div>
+      <div class="contact-value">（请填写地址）</div>
+    </div>
+  </div>
+  <div class="contact-item">
+    <div class="contact-icon">⏰</div>
+    <div class="contact-text">
+      <div class="contact-label">营业时间</div>
+      <div class="contact-value">下午 17:00 - 凌晨 02:00</div>
+    </div>
+  </div>
+  <div class="contact-item">
+    <div class="contact-icon">💳</div>
+    <div class="contact-text">
+      <div class="contact-label">会员充值</div>
+      <div class="contact-value">充500送100 · 充1000送300</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-logo">🎵 金烽音乐餐厅</div>
+  <div>烧烤 · KTV · 音乐 · 美酒</div>
+  <div style="margin-top: 8px;">© 2024 金烽音乐餐厅 版权所有</div>
+</div>
+
+<!-- 底部导航 -->
+<div class="nav">
+  <a class="nav-item" href="#top">
+    <div class="nav-icon">🏠</div>
+    <div>首页</div>
+  </a>
+  <a class="nav-item" href="javascript:showBookModal();">
+    <div class="nav-icon">📅</div>
+    <div>预订</div>
+  </a>
+  <a class="nav-item" href="javascript:alert('会员系统开发中...');">
+    <div class="nav-icon">💳</div>
+    <div>会员</div>
+  </a>
+  <a class="nav-item" href="admin.html">
+    <div class="nav-icon">⚙️</div>
+    <div>管理</div>
+  </a>
+</div>
+
+<!-- 预订弹窗 -->
+<div id="book-modal"></div>
+
+<script>
+function showBookModal() {
+  const html = `
+    <div class="modal-mask" onclick="if(event.target===this)closeBookModal()">
+      <div class="modal">
+        <h3>📅 在线预订</h3>
+        <div class="form-group">
+          <label>姓名</label>
+          <input id="book-name" placeholder="请输入姓名">
+        </div>
+        <div class="form-group">
+          <label>手机号</label>
+          <input id="book-phone" placeholder="请输入手机号">
+        </div>
+        <div class="form-group">
+          <label>预订类型</label>
+          <select id="book-type">
+            <option value="hall">大厅堂食</option>
+            <option value="ktv_small">KTV小包（6-8人）</option>
+            <option value="ktv_mid">KTV中包（10-15人）</option>
+            <option value="ktv_big">KTV大包VIP（20人以上）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>人数</label>
+          <input type="number" id="book-people" placeholder="用餐人数" value="4">
+        </div>
+        <div class="form-group">
+          <label>到店时间</label>
+          <input type="datetime-local" id="book-time">
+        </div>
+        <div class="form-group">
+          <label>备注</label>
+          <input id="book-note" placeholder="其他要求（可留空）">
+        </div>
+        <div class="modal-btns">
+          <button class="btn btn-cancel" onclick="closeBookModal()">取消</button>
+          <button class="btn btn-primary" onclick="submitBooking()">提交预订</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('book-modal').innerHTML = html;
+}
+
+function closeBookModal() {
+  document.getElementById('book-modal').innerHTML = '';
+}
+
+function submitBooking() {
+  const name = document.getElementById('book-name').value.trim();
+  const phone = document.getElementById('book-phone').value.trim();
+  if (!name || !phone) {
+    alert('请填写姓名和手机号！');
+    return;
+  }
+  alert('✅ 预订提交成功！\n\n我们会尽快与您联系确认。\n\n餐厅电话：138-xxxx-xxxx');
+  closeBookModal();
+}
+
+// 默认时间
+document.addEventListener('DOMContentLoaded', function() {
+  const now = new Date();
+  now.setHours(now.getHours() + 1);
+  const defaultTime = now.toISOString().slice(0, 16);
+  // 预订页面默认时间会在打开时设置
+});
+</script>
+</body>
+</html>
