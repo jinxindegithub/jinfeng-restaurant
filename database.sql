@@ -9,9 +9,14 @@ CREATE TABLE IF NOT EXISTS restaurant_users (
   username VARCHAR(50) UNIQUE NOT NULL,
   password VARCHAR(100) NOT NULL,
   name VARCHAR(50),
+  phone VARCHAR(20),
   role VARCHAR(20) DEFAULT 'staff',
+  position VARCHAR(50),
+  salary NUMERIC(10,2) DEFAULT 0,
+  hire_date DATE,
   permissions JSONB DEFAULT '{}'::jsonb,
   status VARCHAR(10) DEFAULT 'active',
+  note VARCHAR(500),
   created_at TIMESTAMP DEFAULT NOW()
 );
 
