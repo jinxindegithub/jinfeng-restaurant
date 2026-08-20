@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS restaurant_tables (
   status VARCHAR(20) DEFAULT 'free',
   current_order_id INT,
   hourly_rate NUMERIC(10,2) DEFAULT 0,
+  sort INT DEFAULT 0,
   note VARCHAR(200),
   created_at TIMESTAMP DEFAULT NOW()
 );
