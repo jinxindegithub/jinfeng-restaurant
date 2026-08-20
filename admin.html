@@ -260,6 +260,7 @@ const menuItems = [
   { id: 'dishes', name: '菜品管理', icon: '🍖' },
   { id: 'tables', name: '桌台设置', icon: '🪑' },
   { id: 'stats', name: '数据统计', icon: '📊' },
+  { id: 'products', name: '货品管理', icon: '📦' },
   { id: 'stockIn', name: '进货管理', icon: '📥' },
   { id: 'stockOut', name: '出货管理', icon: '📤' },
   { id: 'settings', name: '系统设置', icon: '⚙️' },
@@ -319,6 +320,7 @@ function renderPage() {
     case 'dishes': renderDishes(); break;
     case 'tables': renderTableSettings(); break;
     case 'stats': renderStats(); break;
+    case 'products': renderProducts(); break;
     case 'stockIn': renderStockIn(); break;
     case 'stockOut': renderStockOut(); break;
     case 'settings': renderSettings(); break;
@@ -1429,6 +1431,195 @@ async function renderStats() {
   }
 }
 
+// ========== 货品管理 ==========
+let productCategory = '';
+
+async function renderProducts() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const products = await SUPA.list('restaurant_products', 'order=sort.asc,id.asc');
+    const categories = [...new Set(products.map(p => p.category || '其他'))];
+    let filtered = products;
+    if (productCategory) filtered = products.filter(p => (p.category || '其他') === productCategory);
+
+    const totalVal = filtered.reduce((s,p) => s + (p.stock||0) * (p.cost_price||0), 0);
+    const totalItems = filtered.reduce((s,p) => s + (p.stock||0), 0);
+
+    area.innerHTML = `
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:15px;">
+        <div class="stat-card stat-blue">
+          <div class="stat-label">📦 货品种类</div>
+          <div class="stat-value">${products.length}</div>
+          <div class="stat-sub">种不同货品</div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-label">📊 库存总数量</div>
+          <div class="stat-value">${totalItems.toFixed(1)}</div>
+          <div class="stat-sub">所有货品合计</div>
+        </div>
+        <div class="stat-card stat-orange">
+          <div class="stat-label">💰 库存成本价值</div>
+          <div class="stat-value">¥${totalVal.toFixed(2)}</div>
+          <div class="stat-sub">成本价计算</div>
+        </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-label">📂 分类数</div>
+          <div class="stat-value">${categories.length}</div>
+          <div class="stat-sub">个货品分类</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📦 货品管理 (${filtered.length})</div>
+          <button class="btn btn-warn btn-small" onclick="showProductModal()">+ 新增货品</button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" placeholder="搜索货品名称" oninput="filterProductTable(this.value)">
+          <select class="search-select" onchange="productCategory=this.value;renderProducts();">
+            <option value="">全部分类</option>
+            ${categories.map(c => `<option value="${c}" ${productCategory===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <table class="table" id="product-table">
+          <thead>
+            <tr>
+              <th>货品名称</th>
+              <th>分类</th>
+              <th>单位</th>
+              <th>成本价</th>
+              <th>销售价</th>
+              <th>库存</th>
+              <th>库存价值</th>
+              <th>毛利</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(p => {
+              const val = (p.stock||0) * (p.cost_price||0);
+              const profit = (p.sale_price||0) - (p.cost_price||0);
+              const rate = p.sale_price > 0 ? ((profit / p.sale_price) * 100).toFixed(0) : 0;
+              const low = (p.stock||0) < 10;
+              return `
+              <tr>
+                <td><b>${p.name}</b></td>
+                <td><span class="tag tag-blue">${p.category || '-'}</span></td>
+                <td>${p.unit || '个'}</td>
+                <td>¥${(p.cost_price||0).toFixed(2)}</td>
+                <td style="color:#f97316;">¥${(p.sale_price||0).toFixed(2)}</td>
+                <td><b style="color:${low?'#ef4444':'#22c55e'};">${p.stock || 0} ${p.unit||''}</b></td>
+                <td>¥${val.toFixed(2)}</td>
+                <td>¥${profit.toFixed(2)} <small style="color:#999;">(${rate}%)</small></td>
+                <td>
+                  <button class="btn btn-outline btn-small" onclick="editProduct(${p.id})">编辑</button>
+                  <button class="btn btn-danger btn-small" onclick="deleteProduct(${p.id})">删除</button>
+                </td>
+              </tr>
+              `;
+            }).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:30px;">暂无货品，点右上角新增</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allProducts = products;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
+}
+
+function filterProductTable(keyword) {
+  const rows = document.querySelectorAll('#product-table tbody tr');
+  keyword = keyword.toLowerCase();
+  rows.forEach(r => { r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none'; });
+}
+
+function showProductModal(p = null) {
+  const pdata = p || { name:'', category:'肉类', unit:'斤', cost_price:0, sale_price:0, stock:0, sort:0, note:'' };
+  const html = `
+    <h3>${p ? '✏️ 编辑货品' : '➕ 新增货品'}</h3>
+    <div class="form-group"><label class="form-label">货品名称 *</label><input class="form-input" id="p-name" value="${pdata.name}" placeholder="如：鲜羊肉"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">分类</label>
+        <select class="form-input" id="p-cat">
+          ${['肉类','蔬菜','酒水','调料','餐具','其他'].map(c => `<option ${pdata.category===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">单位</label>
+        <select class="form-input" id="p-unit">
+          ${['斤','件','箱','瓶','袋','个','公斤','串'].map(u => `<option ${pdata.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">成本价（元）</label><input class="form-input" type="number" id="p-cost" value="${pdata.cost_price||0}"></div>
+      <div class="form-group"><label class="form-label">销售价（元）</label><input class="form-input" type="number" id="p-sale" value="${pdata.sale_price||0}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">当前库存</label><input class="form-input" type="number" id="p-stock" value="${pdata.stock||0}"></div>
+      <div class="form-group"><label class="form-label">排序号</label><input class="form-input" type="number" id="p-sort" value="${pdata.sort||0}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="p-note" value="${pdata.note||''}"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveProduct(${p?.id || 'null'})">保存</button>
+    </div>
+  `;
+  showModalBox(html);
+}
+
+async function saveProduct(id) {
+  const name = document.getElementById('p-name').value.trim();
+  if (!name) { alert('请填写货品名称！'); return; }
+
+  const data = {
+    name,
+    category: document.getElementById('p-cat').value,
+    unit: document.getElementById('p-unit').value,
+    cost_price: parseFloat(document.getElementById('p-cost').value) || 0,
+    sale_price: parseFloat(document.getElementById('p-sale').value) || 0,
+    stock: parseFloat(document.getElementById('p-stock').value) || 0,
+    sort: parseInt(document.getElementById('p-sort').value) || 0,
+    note: document.getElementById('p-note').value
+  };
+
+  try {
+    if (id) await SUPA.update('restaurant_products', id, data);
+    else await SUPA.create('restaurant_products', data);
+    alert('✅ 保存成功！');
+    closeModal();
+    renderProducts();
+  } catch (e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+function editProduct(id) {
+  const p = (window._allProducts || []).find(x => x.id === id);
+  showProductModal(p);
+}
+
+async function deleteProduct(id) {
+  if (!confirm('确定删除此货品？')) return;
+  try {
+    await SUPA.remove('restaurant_products', id);
+    renderProducts();
+  } catch (e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+async function loadProducts() {
+  try {
+    window._productList = await SUPA.list('restaurant_products', 'order=sort.asc,id.asc');
+  } catch (e) {
+    window._productList = [];
+  }
+  return window._productList;
+}
+
 // ========== 进货管理 ==========
 let stockInDate = '';
 
@@ -1532,25 +1723,24 @@ function filterStockInTable(keyword) {
   rows.forEach(r => { r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none'; });
 }
 
-function showStockInModal() {
+async function showStockInModal() {
+  const products = await loadProducts();
   const html = `
     <h3>📥 新增进货</h3>
-    <div class="form-group"><label class="form-label">物品名称 *</label><input class="form-input" id="s-name" placeholder="如：羊肉、啤酒、蔬菜"></div>
+    <div class="form-group">
+      <label class="form-label">选择货品 *</label>
+      <select class="form-input" id="s-product" onchange="onInProductChange()">
+        <option value="">-- 请选择货品 --</option>
+        ${products.map(p => `<option value="${p.id}">${p.name} (${p.category || '-'})</option>`).join('')}
+      </select>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="form-group"><label class="form-label">分类</label>
-        <select class="form-input" id="s-cat">
-          ${['肉类','蔬菜','酒水','调料','餐具','其他'].map(c => `<option>${c}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group"><label class="form-label">单位</label>
-        <select class="form-input" id="s-unit">
-          ${['斤','件','箱','瓶','袋','个','公斤'].map(u => `<option>${u}</option>`).join('')}
-        </select>
-      </div>
+      <div class="form-group"><label class="form-label">分类</label><input class="form-input" id="s-cat" readonly style="background:#f3f4f6;"></div>
+      <div class="form-group"><label class="form-label">单位</label><input class="form-input" id="s-unit" readonly style="background:#f3f4f6;"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="form-group"><label class="form-label">数量 *</label><input class="form-input" type="number" id="s-qty"></div>
-      <div class="form-group"><label class="form-label">单价（元）</label><input class="form-input" type="number" id="s-price"></div>
+      <div class="form-group"><label class="form-label">进货单价（元）</label><input class="form-input" type="number" id="s-price"></div>
     </div>
     <div class="form-group"><label class="form-label">供应商</label><input class="form-input" id="s-supplier" placeholder="供应商名称"></div>
     <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="s-note"></div>
@@ -1560,6 +1750,20 @@ function showStockInModal() {
     </div>
   `;
   showModalBox(html);
+}
+
+function onInProductChange() {
+  const pid = parseInt(document.getElementById('s-product').value);
+  const p = (window._productList || []).find(x => x.id === pid);
+  if (p) {
+    document.getElementById('s-cat').value = p.category || '';
+    document.getElementById('s-unit').value = p.unit || '';
+    document.getElementById('s-price').value = p.cost_price || 0;
+  } else {
+    document.getElementById('s-cat').value = '';
+    document.getElementById('s-unit').value = '';
+    document.getElementById('s-price').value = '';
+  }
 }
 
 // ========== 出货管理 ==========
@@ -1713,28 +1917,27 @@ function filterStockOutTable(keyword) {
   rows.forEach(r => { r.style.display = r.textContent.toLowerCase().includes(keyword) ? '' : 'none'; });
 }
 
-function showStockOutModal() {
+async function showStockOutModal() {
+  const products = await loadProducts();
   const html = `
     <h3>📤 新增出货</h3>
-    <div class="form-group"><label class="form-label">物品名称 *</label><input class="form-input" id="s-name" placeholder="如：羊肉、啤酒"></div>
+    <div class="form-group">
+      <label class="form-label">选择货品 *</label>
+      <select class="form-input" id="s-product" onchange="onOutProductChange()">
+        <option value="">-- 请选择货品 --</option>
+        ${products.map(p => `<option value="${p.id}">${p.name} (库存: ${p.stock||0}${p.unit||''})</option>`).join('')}
+      </select>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="form-group"><label class="form-label">分类</label>
-        <select class="form-input" id="s-cat">
-          ${['肉类','蔬菜','酒水','调料','餐具','其他'].map(c => `<option>${c}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group"><label class="form-label">单位</label>
-        <select class="form-input" id="s-unit">
-          ${['斤','件','箱','瓶','袋','个','公斤'].map(u => `<option>${u}</option>`).join('')}
-        </select>
-      </div>
+      <div class="form-group"><label class="form-label">分类</label><input class="form-input" id="s-cat" readonly style="background:#f3f4f6;"></div>
+      <div class="form-group"><label class="form-label">单位</label><input class="form-input" id="s-unit" readonly style="background:#f3f4f6;"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="form-group"><label class="form-label">数量 *</label><input class="form-input" type="number" id="s-qty"></div>
       <div class="form-group"><label class="form-label">出货单价（元）</label><input class="form-input" type="number" id="s-price"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="form-group"><label class="form-label">毛利（元）*</label><input class="form-input" type="number" id="s-profit" value="0"></div>
+      <div class="form-group"><label class="form-label">单位毛利（元）</label><input class="form-input" type="number" id="s-profit" value="0"></div>
       <div class="form-group"><label class="form-label">毛利率（自动）</label><input class="form-input" id="s-rate" readonly style="background:#f3f4f6;"></div>
     </div>
     <div class="form-group"><label class="form-label">去向/用途</label><input class="form-input" id="s-supplier" placeholder="卖给谁、用在哪里"></div>
@@ -1745,7 +1948,6 @@ function showStockOutModal() {
     </div>
   `;
   showModalBox(html);
-  // 自动算毛利率
   setTimeout(() => {
     const calc = () => {
       const price = parseFloat(document.getElementById('s-price').value) || 0;
@@ -1758,32 +1960,67 @@ function showStockOutModal() {
   }, 100);
 }
 
+function onOutProductChange() {
+  const pid = parseInt(document.getElementById('s-product').value);
+  const p = (window._productList || []).find(x => x.id === pid);
+  if (p) {
+    document.getElementById('s-cat').value = p.category || '';
+    document.getElementById('s-unit').value = p.unit || '';
+    document.getElementById('s-price').value = p.sale_price || 0;
+    const unitProfit = (p.sale_price||0) - (p.cost_price||0);
+    document.getElementById('s-profit').value = unitProfit.toFixed(2);
+    // 触发毛利率计算
+    document.getElementById('s-price').dispatchEvent(new Event('input'));
+  } else {
+    document.getElementById('s-cat').value = '';
+    document.getElementById('s-unit').value = '';
+    document.getElementById('s-price').value = '';
+    document.getElementById('s-profit').value = 0;
+  }
+}
+
 // 通用保存/删除
 async function saveStock(type) {
-  const name = document.getElementById('s-name').value.trim();
+  const pid = parseInt(document.getElementById('s-product').value);
+  if (!pid) { alert('请选择货品！'); return; }
+  const p = (window._productList || []).find(x => x.id === pid);
+  if (!p) { alert('未找到货品！'); return; }
+
   const qty = parseFloat(document.getElementById('s-qty').value);
-  if (!name || !qty) { alert('请填写名称和数量！'); return; }
+  if (!qty || qty <= 0) { alert('请填写有效数量！'); return; }
 
   const unitPrice = parseFloat(document.getElementById('s-price').value) || 0;
   const totalPrice = qty * unitPrice;
-  const profit = type === 'out' ? (parseFloat(document.getElementById('s-profit').value) || 0) * qty : 0;
+  const unitProfit = parseFloat(document.getElementById('s-profit')?.value) || 0;
+  const profit = type === 'out' ? unitProfit * qty : 0;
 
   try {
+    // 保存进出货记录
     await SUPA.create('restaurant_stock', {
       type: type,
-      item_name: name,
-      category: document.getElementById('s-cat').value,
+      product_id: pid,
+      item_name: p.name,
+      category: p.category,
       quantity: qty,
-      unit: document.getElementById('s-unit').value,
+      unit: p.unit,
       unit_price: unitPrice,
       total_price: totalPrice,
       profit: profit,
-      supplier: document.getElementById('s-supplier').value,
+      supplier: document.getElementById('s-supplier')?.value || '',
       operator_id: currentUser.id,
       operator_name: currentUser.name || currentUser.username,
-      note: document.getElementById('s-note').value
+      note: document.getElementById('s-note')?.value || ''
     });
-    alert('✅ 保存成功！');
+
+    // 更新货品库存
+    const newStock = type === 'in' ? (p.stock||0) + qty : (p.stock||0) - qty;
+    try {
+      await SUPA.update('restaurant_products', pid, { stock: newStock });
+    } catch (e) {
+      console.warn('库存更新失败', e);
+    }
+
+    alert('✅ 保存成功！库存已更新');
     closeModal();
     if (type === 'in') renderStockIn();
     else renderStockOut();
