@@ -257,6 +257,7 @@ const menuItems = [
   { id: 'orders', name: '订单管理', icon: '📋' },
   { id: 'members', name: '会员管理', icon: '💳' },
   { id: 'employees', name: '员工管理', icon: '👥' },
+  { id: 'attendance', name: '考勤管理', icon: '📋' },
   { id: 'dishes', name: '菜品管理', icon: '🍖' },
   { id: 'tables', name: '桌台设置', icon: '🪑' },
   { id: 'stats', name: '数据统计', icon: '📊' },
@@ -317,6 +318,7 @@ function renderPage() {
     case 'orders': renderOrders(); break;
     case 'members': renderMembers(); break;
     case 'employees': renderEmployees(); break;
+    case 'attendance': renderAttendance(); break;
     case 'dishes': renderDishes(); break;
     case 'tables': renderTableSettings(); break;
     case 'stats': renderStats(); break;
@@ -1088,6 +1090,369 @@ function filterEmployeeRole(role) {
 function roleTextOf(r) {
   const map = { admin:'管理员', manager:'店长', chef:'厨师', waiter:'服务员', cashier:'收银员', ktv:'KTV服务', staff:'其他' };
   return map[r] || '';
+}
+
+// ========== 考勤管理 ==========
+let attView = 'month'; // month / year
+let attDate = '';
+let attEmp = '';
+
+async function renderAttendance() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = '<div style="text-align:center;padding:30px;">加载中...</div>';
+
+  try {
+    const users = await SUPA.list('restaurant_users', 'order=id.asc');
+    const today = new Date().toISOString().slice(0,10);
+    const y = new Date().getFullYear();
+    const m = String(new Date().getMonth() + 1).padStart(2, '0');
+    if (!attDate) attDate = attView === 'month' ? `${y}-${m}` : `${y}`;
+
+    // 加载考勤数据
+    let startDate, endDate;
+    if (attView === 'month') {
+      startDate = `${attDate}-01`;
+      const lastDay = new Date(attDate + '-01');
+      lastDay.setMonth(lastDay.getMonth() + 1);
+      lastDay.setDate(0);
+      endDate = lastDay.toISOString().slice(0,10);
+    } else {
+      startDate = `${attDate}-01-01`;
+      endDate = `${attDate}-12-31`;
+    }
+
+    const allAtt = await SUPA.list('restaurant_attendance',
+      `date=gte.${startDate}&date=lte.${endDate}&order=date.desc`);
+
+    // 按员工统计
+    const empStats = {};
+    users.forEach(u => {
+      empStats[u.id] = {
+        name: u.name || u.username,
+        total: 0, normal: 0, late: 0, early: 0, absent: 0, leave: 0, hours: 0
+      };
+    });
+    allAtt.forEach(a => {
+      const s = empStats[a.user_id];
+      if (!s) return;
+      s.total++;
+      s.hours += a.work_hours || 0;
+      if (a.status === '正常') s.normal++;
+      else if (a.status === '迟到') s.late++;
+      else if (a.status === '早退') s.early++;
+      else if (a.status === '缺勤') s.absent++;
+      else if (a.status === '请假') s.leave++;
+    });
+
+    // 总体统计
+    const totalDays = allAtt.length;
+    const normalDays = allAtt.filter(a => a.status === '正常').length;
+    const lateDays = allAtt.filter(a => a.status === '迟到').length;
+    const earlyDays = allAtt.filter(a => a.status === '早退').length;
+    const absentDays = allAtt.filter(a => a.status === '缺勤').length;
+    const leaveDays = allAtt.filter(a => a.status === '请假').length;
+    const totalHours = allAtt.reduce((s,a) => s + (a.work_hours||0), 0);
+
+    let filtered = allAtt;
+    if (attEmp) filtered = filtered.filter(a => a.user_id == attEmp);
+
+    const title = attView === 'month'
+      ? `${attDate} 月考勤统计`
+      : `${attDate} 年度考勤统计`;
+
+    area.innerHTML = `
+      <div class="stats-grid" style="grid-template-columns:repeat(6,1fr);margin-bottom:15px;">
+        <div class="stat-card stat-blue">
+          <div class="stat-label">${attView==='month'?'📅 本月出勤':'📅 年度出勤'}</div>
+          <div class="stat-value">${totalDays}</div>
+          <div class="stat-sub">打卡次数</div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-label">✅ 正常</div>
+          <div class="stat-value">${normalDays}</div>
+          <div class="stat-sub">天</div>
+        </div>
+        <div class="stat-card stat-orange">
+          <div class="stat-label">⏰ 迟到</div>
+          <div class="stat-value">${lateDays}</div>
+          <div class="stat-sub">次</div>
+        </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-label">🚶 早退</div>
+          <div class="stat-value">${earlyDays}</div>
+          <div class="stat-sub">次</div>
+        </div>
+        <div class="stat-card" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;">
+          <div class="stat-label">❌ 缺勤</div>
+          <div class="stat-value">${absentDays}</div>
+          <div class="stat-sub">天</div>
+        </div>
+        <div class="stat-card" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;">
+          <div class="stat-label">⏱️ 总工时</div>
+          <div class="stat-value">${totalHours.toFixed(1)}</div>
+          <div class="stat-sub">小时</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 ${title} - 员工考勤汇总</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn ${attView==='month'?'btn-primary':'btn-outline'} btn-small" onclick="attView='month';attDate='';renderAttendance();">当月统计</button>
+            <button class="btn ${attView==='year'?'btn-primary':'btn-outline'} btn-small" onclick="attView='year';attDate='';renderAttendance();">年度统计</button>
+            <button class="btn btn-warn btn-small" onclick="showAttModal()">+ 新增打卡</button>
+          </div>
+        </div>
+
+        <div class="search-bar">
+          <input class="search-input" placeholder="搜索员工姓名" oninput="filterAttEmpTable(this.value)">
+          <select class="search-select" onchange="attEmp=this.value;renderAttendance();">
+            <option value="">全部员工</option>
+            ${users.map(u => `<option value="${u.id}" ${attEmp==u.id?'selected':''}>${u.name || u.username}</option>`).join('')}
+          </select>
+          ${attView === 'month'
+            ? `<input type="month" class="search-select" value="${attDate}" onchange="attDate=this.value;renderAttendance();">`
+            : `<select class="search-select" onchange="attDate=this.value;renderAttendance();">
+                ${[y, y-1, y-2].map(y2 => `<option value="${y2}" ${attDate==y2?'selected':''}>${y2}年</option>`).join('')}
+              </select>`}
+          <button class="btn btn-outline btn-small" onclick="quickCheckIn()">⚡ 快速打卡</button>
+        </div>
+
+        <table class="table" id="att-emp-table">
+          <thead>
+            <tr>
+              <th>员工姓名</th>
+              <th>出勤天数</th>
+              <th>正常</th>
+              <th>迟到</th>
+              <th>早退</th>
+              <th>缺勤</th>
+              <th>请假</th>
+              <th>总工时</th>
+              <th>出勤率</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.values(empStats).filter(s => s.total > 0 || !attEmp).map(s => {
+              const rate = s.total > 0 ? ((s.normal / s.total) * 100).toFixed(1) : 0;
+              return `
+              <tr>
+                <td><b>${s.name}</b></td>
+                <td style="font-weight:bold;">${s.total}</td>
+                <td style="color:#22c55e;">${s.normal}</td>
+                <td style="color:#f97316;">${s.late}</td>
+                <td style="color:#8b5cf6;">${s.early}</td>
+                <td style="color:#ef4444;">${s.absent}</td>
+                <td style="color:#6b7280;">${s.leave}</td>
+                <td>${s.hours.toFixed(1)} h</td>
+                <td><span class="tag tag-green">${rate}%</span></td>
+              </tr>
+              `;
+            }).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:30px;">暂无考勤数据</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:15px;">
+        <div class="card-header">
+          <div class="card-title">📝 打卡明细 (${filtered.length})</div>
+        </div>
+        <table class="table" id="att-detail-table">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>员工</th>
+              <th>上班打卡</th>
+              <th>下班打卡</th>
+              <th>工时</th>
+              <th>状态</th>
+              <th>备注</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(a => `
+              <tr>
+                <td><b>${a.date}</b></td>
+                <td>${a.user_name || '-'}</td>
+                <td style="color:#22c55e;">${a.check_in || '-'}</td>
+                <td style="color:#f97316;">${a.check_out || '-'}</td>
+                <td>${a.work_hours || 0} h</td>
+                <td>${statusTag(a.status)}</td>
+                <td style="color:#888;font-size:12px;">${a.note || '-'}</td>
+                <td>
+                  <button class="btn btn-outline btn-small" onclick="editAtt(${a.id})">编辑</button>
+                  <button class="btn btn-danger btn-small" onclick="deleteAtt(${a.id})">删除</button>
+                </td>
+              </tr>
+            `).join('') || '<tr><td colspan="8" style="text-align:center;color:#999;padding:30px;">暂无打卡记录</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    `;
+    window._allAtt = allAtt;
+    window._attUsers = users;
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:30px;color:#f44336;">加载失败：${e.message}</div>`;
+  }
+}
+
+function statusTag(s) {
+  const map = {
+    '正常': 'tag-green',
+    '迟到': 'tag-orange',
+    '早退': 'tag-purple',
+    '缺勤': 'tag-red',
+    '请假': 'tag-blue'
+  };
+  return `<span class="tag ${map[s] || 'tag-gray'}">${s || '-'}</span>`;
+}
+
+function filterAttEmpTable(keyword) {
+  document.querySelectorAll('#att-emp-table tbody tr, #att-detail-table tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(keyword.toLowerCase()) ? '' : 'none';
+  });
+}
+
+async function showAttModal(att = null) {
+  const users = window._attUsers || await SUPA.list('restaurant_users', 'order=id.asc');
+  const a = att || { user_id: currentUser.id, date: new Date().toISOString().slice(0,10),
+    check_in: '', check_out: '', status: '正常', note: '' };
+
+  const html = `
+    <h3>${att ? '✏️ 编辑打卡' : '➕ 新增打卡'}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">员工 *</label>
+        <select class="form-input" id="a-user">
+          ${users.map(u => `<option value="${u.id}" ${a.user_id==u.id?'selected':''}>${u.name || u.username}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">日期 *</label><input type="date" class="form-input" id="a-date" value="${a.date}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">上班打卡时间</label><input type="time" class="form-input" id="a-in" value="${a.check_in||''}"></div>
+      <div class="form-group"><label class="form-label">下班打卡时间</label><input type="time" class="form-input" id="a-out" value="${a.check_out||''}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label class="form-label">状态</label>
+        <select class="form-input" id="a-status">
+          ${['正常','迟到','早退','缺勤','请假'].map(s => `<option ${a.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">工时（自动）</label><input class="form-input" id="a-hours" readonly style="background:#f3f4f6;"></div>
+    </div>
+    <div class="form-group"><label class="form-label">备注</label><input class="form-input" id="a-note" value="${a.note||''}"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveAtt(${att?.id || 'null'})">保存</button>
+    </div>
+  `;
+  showModalBox(html);
+  setTimeout(() => {
+    const calc = () => {
+      const t1 = document.getElementById('a-in').value;
+      const t2 = document.getElementById('a-out').value;
+      if (t1 && t2) {
+        const [h1,m1] = t1.split(':').map(Number);
+        const [h2,m2] = t2.split(':').map(Number);
+        let h = (h2*60+m2 - h1*60-m1) / 60;
+        if (h < 0) h += 24;
+        document.getElementById('a-hours').value = h.toFixed(2);
+      } else {
+        document.getElementById('a-hours').value = '';
+      }
+    };
+    calc();
+    document.getElementById('a-in').addEventListener('change', calc);
+    document.getElementById('a-out').addEventListener('change', calc);
+  }, 100);
+}
+
+async function saveAtt(id) {
+  const userId = parseInt(document.getElementById('a-user').value);
+  const date = document.getElementById('a-date').value;
+  if (!userId || !date) { alert('请选择员工和日期！'); return; }
+
+  const checkIn = document.getElementById('a-in').value;
+  const checkOut = document.getElementById('a-out').value;
+  const hours = parseFloat(document.getElementById('a-hours').value) || 0;
+
+  const user = (window._attUsers || []).find(u => u.id === userId);
+  const data = {
+    user_id: userId,
+    user_name: user ? (user.name || user.username) : '',
+    date,
+    check_in: checkIn || null,
+    check_out: checkOut || null,
+    status: document.getElementById('a-status').value,
+    work_hours: hours,
+    note: document.getElementById('a-note').value
+  };
+
+  try {
+    if (id) await SUPA.update('restaurant_attendance', id, data);
+    else await SUPA.create('restaurant_attendance', data);
+    alert('✅ 保存成功！');
+    closeModal();
+    renderAttendance();
+  } catch (e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+function editAtt(id) {
+  const a = (window._allAtt || []).find(x => x.id === id);
+  if (a) showAttModal(a);
+}
+
+async function deleteAtt(id) {
+  if (!confirm('确定删除这条打卡记录？')) return;
+  try {
+    await SUPA.remove('restaurant_attendance', id);
+    renderAttendance();
+  } catch (e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+// 快速打卡：当前用户 + 当前时间，直接打上班/下班卡
+async function quickCheckIn() {
+  const today = new Date().toISOString().slice(0,10);
+  const now = new Date().toTimeString().slice(0,5);
+
+  try {
+    // 查今天有没有打卡记录
+    const existing = await SUPA.list('restaurant_attendance',
+      `user_id=eq.${currentUser.id}&date=eq.${today}`);
+
+    if (existing.length === 0) {
+      // 上班打卡
+      await SUPA.create('restaurant_attendance', {
+        user_id: currentUser.id,
+        user_name: currentUser.name || currentUser.username,
+        date: today,
+        check_in: now,
+        status: '正常'
+      });
+      alert(`✅ 上班打卡成功！\n时间：${now}`);
+    } else {
+      // 下班打卡
+      const rec = existing[0];
+      const t1 = rec.check_in || now;
+      const [h1,m1] = t1.split(':').map(Number);
+      const [h2,m2] = now.split(':').map(Number);
+      let h = (h2*60+m2 - h1*60-m1) / 60;
+      if (h < 0) h += 24;
+      await SUPA.update('restaurant_attendance', rec.id, {
+        check_out: now,
+        work_hours: parseFloat(h.toFixed(2))
+      });
+      alert(`✅ 下班打卡成功！\n下班：${now}\n工时：${h.toFixed(2)} 小时`);
+    }
+    renderAttendance();
+  } catch (e) {
+    alert('打卡失败：' + e.message);
+  }
 }
 
 // ========== 菜品管理 ==========
